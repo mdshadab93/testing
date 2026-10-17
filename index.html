@@ -211,9 +211,8 @@ td.t-th{background:rgba(16,185,129,.14)}td.t-lab{background:rgba(245,158,11,.18)
   <div id="dmsg" class="s" style="margin:6px 0"></div><div id="mlist" class="ml"></div></details>
 </section>
 <section id="set" class="hide">
- <div class="card" id="sbnote"><b>Users are managed in Supabase</b><p class="s">Add, remove, switch off users or change passwords in your Supabase project: <b>Table Editor &rarr; app_users</b>. The password you type there is stored as a secure hash automatically. The <b>features</b> column controls what each user can see. Changes work immediately on every computer.</p></div>
- <div class="card" style="display:none"><b>Users</b><p class="s">Tick or untick a feature to give or take it away from that user. The admin always has everything; new accounts are always ordinary users. Each user who has the upload feature uploads and keeps their own timetables; other users see the timetable data you share. Changes apply on this browser at once; use "Share this page" below so other people get them too.</p><div id="umsg" class="s" style="margin:6px 0;min-height:18px"></div><div class="g" id="ulist"></div></div>
- <div class="card" style="display:none"><b>Add a new user</b>
+ <div class="card"><b>Users</b><p class="s">Tick or untick a feature (tab) to give it to or take it away from a user. Changes are saved to Supabase at once and apply the next time that user signs in. Use <b>All</b> / <b>None</b> for quick changes. The admin always has every feature.</p><div id="umsg" class="s" style="margin:6px 0;min-height:18px"></div><div class="g" id="ulist"></div></div>
+ <div class="card"><b>Add a new user</b>
   <div class="row" style="margin-top:8px"><input id="nu" placeholder="Username" autocomplete="off"><input id="np" placeholder="Password (min 6 characters)" autocomplete="off"><button class="chip" id="ngen">Generate password</button><select id="nr"><option value="user">User</option></select></div>
   <div class="pwm" id="npwm"><i></i></div><div class="s" id="npwt"></div>
   <label class="l">Features for this user</label><div class="row" id="nf"></div>
@@ -1247,7 +1246,10 @@ async function doAuth(){
  if(!row){fails++;if(fails>=5){lockUntil=Date.now()+30000;fails=0}return msg.textContent='Wrong login id or password.'}
  fails=0;
  try{if($('arem').checked)localStorage.setItem('free_faculty_lastid',row.username);else localStorage.removeItem('free_faculty_lastid')}catch(e){}
- enter(userFromRow(row))}
+ const um=userFromRow(row);
+ if(um.role!=='admin'&&!um.features.length)return msg.textContent='Login is correct, but no features are assigned to this account. Ask the admin to fill the features column for this user in Supabase.';
+ if(um.role==='admin')ADMINPW=pw;
+ enter(um)}
 function showTab(v){
  document.querySelectorAll('.tabs .tab').forEach(x=>x.classList.toggle('on',x.dataset.v===v));
  ['time','fac','tt','duty','cmp','set'].forEach(id=>$(id).classList.toggle('hide',id!==v));requestAnimationFrame(moveInd);if(v==='duty'){dutyAnim=true;renderDuty()}
@@ -1276,51 +1278,61 @@ $('logout').onclick=()=>{try{sessionStorage.removeItem(SKEY)}catch(e){}location.
 /* settings (admin only) */
 const dlText=(name,text,type)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:type||'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove();toast('Downloaded '+name,'ok')};
 function featBoxes(sel,checked,disabled,tag){return FEATS.map(([k,l])=>`<label class="uf"><input type="checkbox" ${tag} data-f="${k}" ${checked.includes(k)?'checked':''} ${disabled?'disabled':''}> ${l}</label>`).join('')}
-function renderSettings(){
+let ADMINPW=null;
+const sbHdr=()=>{const h={'Content-Type':'application/json',apikey:SUPABASE_KEY};if(SUPABASE_KEY.startsWith('eyJ'))h.Authorization='Bearer '+SUPABASE_KEY;return h};
+async function sbAdmin(fn,args){
+ if(!ADMINPW){const p=await dlgOpen({msg:'Enter your admin password to manage users:',input:true,ok:'Continue',placeholder:'admin password',validate:v=>v?'':'Please enter the password.'});
+  if(p===null)throw new Error('cancelled');ADMINPW=p}
+ const r=await fetch(SUPABASE_URL.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:sbHdr(),body:JSON.stringify(Object.assign({p_admin:ME.name,p_admin_pw:ADMINPW},args||{}))});
+ if(!r.ok){let m='';try{m=(await r.json()).message||''}catch(e){}
+  if(/not allowed/i.test(m)){ADMINPW=null;m='The admin password was not accepted. Try again.'}
+  if(/Could not find the function/i.test(m))m='Supabase admin functions are missing. Run supabase_admin_functions.sql in the SQL Editor first.';
+  throw new Error(m||('HTTP '+r.status))}
+ const t=await r.text();return t?JSON.parse(t):null}
+async function renderSettings(){
  if(!ME||ME.role!=='admin')return;
- $('ulist').innerHTML=`<table style="min-width:1050px"><tr><th>Login id</th><th>Role</th><th>Active</th><th>Recovery code</th><th>Features</th><th>Actions</th></tr>${[ADMIN].concat(U.list).map(u=>`<tr data-user="${esc(u.u)}"><td>${avatar(u.name,30)}<b>${esc(u.name)}</b>${u.u===ME.u?' <span class="s">(you)</span>':''}</td><td>${u.builtin?'Admin':'User'}</td><td><input type="checkbox" data-uact ${u.active?'checked':''} ${u.builtin?'disabled':''}></td><td>${RECS[u.u]?`<code style="font-size:12px;user-select:all">${RECS[u.u]}</code> <button class="chip" data-rcopy="${RECS[u.u]}">Copy</button>`:'<span class="s">not saved in this browser - press New recovery code</span>'}</td><td>${u.role==='admin'?'<span class="s">All features</span>':FEATS.map(([k,l])=>`<label class="uf"><input type="checkbox" data-uf="${k}" ${u.features.includes(k)?'checked':''}> ${l}</label>`).join('')}</td><td><button class="chip" data-upw>Set password</button> <button class="chip" data-urec>New recovery code</button> ${u.builtin?'':'<button class="chip" data-udel style="color:var(--not)">Delete</button>'}</td></tr>`).join('')}</table>`;
- const lastShare=+(localStorage.getItem('free_faculty_lastshare')||0),changed=U.list.some(u=>(u.m||0)>lastShare)||(ADMIN.m||0)>lastShare||Object.values(U.del||{}).some(t=>t>lastShare);
- $('shwarn').textContent=changed?'You changed users, passwords or recovery codes since the last users.xml download. Download users.xml again and use the new file on the other computers, otherwise they will not know about the changes.':'';
+ const box=$('ulist');box.innerHTML='<p class="s">Loading users...</p>';
+ let list;try{list=await sbAdmin('admin_list_users')}catch(e){box.innerHTML='';if(e.message!=='cancelled')smsg2('Could not load users: '+e.message,false);return}
+ box.innerHTML=`<table style="min-width:900px"><tr><th>Login id</th><th>Role</th><th>Active</th><th>Features (tabs this user can use)</th><th>Actions</th></tr>${list.map(u=>{const adm=u.role==='admin',me=String(u.username).toLowerCase()===ME.u;
+  return `<tr data-user="${esc(u.username)}"><td>${avatar(u.username,30)}<b>${esc(u.username)}</b>${me?' <span class="s">(you)</span>':''}</td><td>${adm?'Admin':'User'}</td><td><input type="checkbox" data-uact ${u.active?'checked':''} ${me?'disabled':''}></td><td>${adm?'<span class="s">All features</span>':'<div style="margin-bottom:6px"><button class="chip" data-all>All</button> <button class="chip" data-none>None</button></div>'+FEATS.map(([k,l])=>`<label class="uf"><input type="checkbox" data-uf="${k}" ${(u.features||[]).includes(k)?'checked':''}> ${l}</label>`).join('')}</td><td><button class="chip" data-upw>Set password</button> ${me?'':'<button class="chip" data-udel style="color:var(--not)">Delete</button>'}</td></tr>`}).join('')}</table>`;
  if(!$('nf').children.length)$('nf').innerHTML=featBoxes('nf',PRESET.view,false,'data-nf')}
+async function saveFeat(tr){const name=tr.dataset.user,f=[...tr.querySelectorAll('[data-uf]:checked')].map(c=>c.dataset.uf);
+ await sbAdmin('admin_set_features',{p_username:name,p_features:f});smsg2('Saved: '+name+' now has '+f.length+' feature'+(f.length===1?'':'s')+'. It applies the next time '+name+' signs in.',true)}
 
 function pwScore(p){let k=0;if(p.length>=6)k++;if(p.length>=10)k++;if(/[a-z]/.test(p)&&/[A-Z]/.test(p))k++;if(/\d/.test(p)&&/[^A-Za-z0-9]|[A-Za-z]/.test(p))k++;if(/[^A-Za-z0-9]/.test(p)||p.length>=14)k++;return Math.min(4,Math.max(p.length?1:0,k-(p.length<6?1:0)))}
 function pwMeter(inp,bar,txt){const sc=['','Too weak','Weak','Good','Strong'],col=['transparent','#ef4444','#f59e0b','#10b981','#059669'];const f=()=>{const k=pwScore($(inp).value);$(bar).firstElementChild.style.width=(k*25)+'%';$(bar).firstElementChild.style.background=col[k];if(txt)$(txt).textContent=$(inp).value?'Password strength: '+sc[k]:''};$(inp).addEventListener('input',f);return f}
 const npF=pwMeter('np','npwm','npwt');pwMeter('cp1','cpwm');
 const smsg2=(t,ok)=>{const m=$('umsg');m.textContent=t;m.style.color=ok?'var(--okt)':'var(--not)'};
 const smsg=(t,ok)=>{const m=$('nmsg');m.textContent=t;m.style.color=ok?'var(--okt)':'var(--not)'};
-$('set').addEventListener('click',e=>{const t=e.target;
+$('set').addEventListener('click',async e=>{const t=e.target;
+ try{
  if(t.dataset.preset){const p=PRESET[t.dataset.preset];$('nf').querySelectorAll('[data-nf]').forEach(c=>c.checked=p.includes(c.dataset.f))}
  else if(t.id==='ngen'){const a='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';let p='';const r=new Uint8Array(10);crypto.getRandomValues(r);r.forEach(x=>p+=a[x%a.length]);$('np').value=p;$('np').dispatchEvent(new Event('input'))}
- else if(t.id==='nadd'){const n=$('nu').value.trim(),p=$('np').value,role='user';
+ else if(t.id==='nadd'){const n=$('nu').value.trim(),p=$('np').value;
   if(!/^[A-Za-z0-9._@-]{3,30}$/.test(n))return smsg('Login id: 3-30 letters, numbers or . _ @ -');
-  if(n.toLowerCase()===ADMIN_ID)return smsg('"admin" is reserved for the built-in admin. Choose another login id.');
-  if(findU(n))return smsg('That login id already exists.');
   if(p.length<6)return smsg('Password must be at least 6 characters.');
   const f=[...$('nf').querySelectorAll('[data-nf]:checked')].map(c=>c.dataset.f);
-  const nu=mkUser(n,p,role,f);const rc=setRec(nu);U.list.push(nu);saveUsers();smsg(`User "${n}" created. Password: ${p}   Recovery code: ${rc}   (also visible in the table below). Download users.xml again under "Share this page" so this user's copy knows it.`,true);$('nu').value='';$('np').value='';renderSettings()}
- else if(t.dataset.rcopy){copyText(t.dataset.rcopy);t.textContent='Copied'}
- else if(t.dataset.upw!==undefined){const u=findU(t.closest('tr').dataset.user);uiPassword('Set a new password for '+u.name+':').then(p=>{if(p===null)return;u.salt=randHex(16);u.hash=hashPw(u.salt,p);saveUsers();smsg2('Password changed for '+u.name+'. New password: '+p+' (note it down, it cannot be shown again).',true)})}
- else if(t.dataset.urec!==undefined){const u=findU(t.closest('tr').dataset.user);uiConfirm('Make a new recovery code for '+u.name+'? The old one will stop working.','Make new code').then(ok=>{if(!ok)return;const c=setRec(u);saveUsers();smsg2('New recovery code for '+u.name+': '+c+'   Download users.xml again under "Share this page" so this user\'s copy knows the new code.',true);renderSettings()})}
- else if(t.dataset.udel!==undefined){const u=findU(t.closest('tr').dataset.user);
-  if(u.u===ME.u)return uiAlert('You cannot delete the account you are signed in with.');
-  if(u.role==='admin'&&admins().length<2)return uiAlert('At least one admin must remain.');
-  uiConfirm('Delete user '+u.name+'? This cannot be undone.','Delete').then(ok=>{if(!ok)return;U.list=U.list.filter(x=>x!==u);U.del[u.u]=Date.now();delete RECS[u.u];saveRecs();saveUsers();renderSettings();smsg2('User '+u.name+' was deleted.',true)})}
- else if(t.id==='cpgo'){const c0=$('cp0').value,a=$('cp1').value,b=$('cp2').value,m=$('cpmsg');m.style.color='var(--not)';
-  if(!adminPwOk(c0))return m.textContent='The current password is wrong.';
-  if(a.length<6)return m.textContent='The new password must be at least 6 characters.';
-  if(a!==b)return m.textContent='The two new passwords do not match.';
-  ADMIN.salt=randHex(16);ADMIN.hash=hashPw(ADMIN.salt,a);saveUsers();m.style.color='var(--okt)';m.textContent='Admin password changed. Download users.xml again under "Share this page" so other copies know it.';$('cp0').value='';$('cp1').value='';$('cp2').value='';renderSettings()}
- else if(t.id==='cprec'){uiConfirm('Make a new recovery code for the admin? The old one will stop working.','Make new code').then(ok=>{if(!ok)return;const c=setRec(ADMIN);saveUsers();uiCode('admin',c,'New recovery code made. Download users.xml again under "Share this page" so other copies know it.');renderSettings()})}
+  t.disabled=true;try{await sbAdmin('admin_add_user',{p_username:n,p_password:p,p_features:f})}finally{t.disabled=false}
+  smsg(`User "${n}" created in Supabase. Login id: ${n}   Password: ${p}   (note it down, it cannot be shown again). Features: ${f.length}.`,true);$('nu').value='';$('np').value='';$('np').dispatchEvent(new Event('input'));renderSettings()}
+ else if(t.dataset.all!==undefined||t.dataset.none!==undefined){const tr=t.closest('tr');tr.querySelectorAll('[data-uf]').forEach(c=>c.checked=t.dataset.all!==undefined);await saveFeat(tr)}
+ else if(t.dataset.upw!==undefined){const name=t.closest('tr').dataset.user;
+  const pw=await uiPassword('Set a new password for '+name+':');if(pw===null)return;
+  await sbAdmin('admin_set_password',{p_username:name,p_new_password:pw});if(name.toLowerCase()===ME.u)ADMINPW=pw;
+  smsg2('Password changed for '+name+'. New password: '+pw+' (note it down, it cannot be shown again).',true)}
+ else if(t.dataset.udel!==undefined){const name=t.closest('tr').dataset.user;
+  const ok=await uiConfirm('Delete user '+name+'? This cannot be undone.','Delete');if(!ok)return;
+  await sbAdmin('admin_delete_user',{p_username:name});smsg2('User '+name+' was deleted.',true);renderSettings()}
  else if(t.id==='dlshare'){const inc=$('shdata').checked&&D.fac.length;
   const cfg={v:U.v||Date.now(),admin:(ADMIN.hash||ADMIN.rh)?adminData():null,users:U.list,del:U.del,data:inc?{D,incl:[...incl],seed,msg:lastMsg,t:Date.now()}:null};
   const json=JSON.stringify(cfg).replace(/</g,'\\u003c');
   try{localStorage.setItem('free_faculty_lastshare',String(Date.now()))}catch(e){}renderSettings();dlText('free_faculty_finder.html',PRISTINE.replace(/(<script id="cfg" type="application\/json">)[\s\S]*?(<\/script>)/,(m,a,b)=>a+json+b),'text/html')}
- else if(t.id==='uxml'){try{localStorage.setItem('free_faculty_lastshare',String(Date.now()))}catch(e){}dlText('users.xml',usersToXml(),'text/xml');renderSettings()}});
-$('set').addEventListener('change',e=>{const t=e.target,tr=t.closest('tr[data-user]');
- if(t.id==='uimp'){const f=t.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const n=mergeIn(xmlToUsers(r.result));renderSettings();smsg2('users.xml imported: '+n+' change(s) applied, '+U.list.length+' user(s) now.',true)}catch(err){uiAlert('This is not a valid users.xml file.')}};r.readAsText(f);t.value=''}
- else if(tr){const u=findU(tr.dataset.user);
-  if(t.dataset.uact!==undefined){if(!t.checked&&(u.u===ME.u||(u.role==='admin'&&admins().length<2))){uiAlert(u.u===ME.u?'You cannot deactivate your own account.':'At least one admin must stay active.');return renderSettings()}u.active=t.checked;saveUsers()}
-  else if(t.dataset.uf){const f=t.dataset.uf;u.features=t.checked?[...new Set([...u.features,f])]:u.features.filter(x=>x!==f);saveUsers()}}});
+ }catch(err){if(err&&err.message!=='cancelled'){const m=err.message||String(err);if($('nmsg')&&(t.id==='nadd'))smsg(m,false);else smsg2(m,false)}}});
+$('set').addEventListener('change',async e=>{const t=e.target,tr=t.closest('tr[data-user]');if(!tr)return;
+ const name=tr.dataset.user;
+ try{
+  if(t.dataset.uact!==undefined){await sbAdmin('admin_set_active',{p_username:name,p_active:t.checked});smsg2(name+(t.checked?' is switched on.':' is switched off and can no longer sign in.'),true)}
+  else if(t.dataset.uf){await saveFeat(tr)}
+ }catch(err){if(err&&err.message!=='cancelled')smsg2(err.message||String(err),false);renderSettings()}});
 
 /* ===== in-page dialogs (browser pop-ups are often blocked) ===== */
 function dlgOpen(o){return new Promise(res=>{
