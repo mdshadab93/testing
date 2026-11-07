@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Publication Records Manager</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1d2330;--mut:#667085;--bd:#d9dde5;--ac:#1f5eff}
+@media(prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1d222b;--tx:#e8ebf0;--mut:#9aa3b2;--bd:#323946;--ac:#6b93ff}}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui,sans-serif;background:var(--bg);color:var(--tx);padding:16px}
+h1{font-size:20px;margin:0 0 12px}h2{font-size:15px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:14px}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tabs button{padding:8px 14px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;cursor:pointer}
+.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+input,select{padding:7px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);width:100%}
+label{font-size:12px;color:var(--mut);display:block;margin-bottom:3px}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.btn{padding:8px 14px;border:0;border-radius:6px;background:var(--ac);color:#fff;cursor:pointer;margin:8px 6px 0 0}
+.btn.s{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+.w{overflow-x:auto;max-height:480px}table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border:1px solid var(--bd);padding:5px 8px;text-align:left;vertical-align:top}th{position:sticky;top:0;background:var(--card)}
+#msg{position:fixed;right:14px;bottom:14px;background:var(--tx);color:var(--bg);padding:10px 14px;border-radius:8px;display:none;max-width:80%}
+.m{color:var(--mut);font-size:12px}a{color:var(--ac)}
+</style></head><body>
+<h1>Publication Records Manager</h1>
+
+<div class="card" id="cfgwarn" style="display:none"><b>Supabase is not set.</b> Open this file in Notepad and paste your Project URL and key in <code>SB_URL</code> and <code>SB_KEY</code> near the top of the script.</div>
+
+<div class="card"><h2>1. Excel upload</h2><label>Upload type</label><div class="tabs" id="tabs"></div>
+<input type="file" id="file" accept=".xlsx,.xls,.csv">
+<button class="btn" onclick="upload()">Upload to Supabase</button>
+<button class="btn s" onclick="template()">Download Excel template</button>
+<div class="m" id="upinfo"></div></div>
+
+<div class="card"><h2>2. Search</h2>
+<div class="g">
+<div><label>Name (author / GLB author / co-author)</label><input id="q_name"></div>
+<div><label>Year from</label><input id="q_from" type="number"></div>
+<div><label>Year to</label><input id="q_to" type="number"></div>
+<div><label>Title / keyword</label><input id="q_title"></div>
+<div><label>Department</label><input id="q_dept"></div>
+<div><label>Indexing</label><input id="q_idx"></div></div>
+<div class="m">Fill any one or combine several (all filled filters must match).</div>
+<button class="btn" onclick="search()">Search</button>
+<button class="btn s" onclick="clearQ()">Clear</button>
+<button class="btn s" onclick="refresh()">Reload data</button></div>
+
+<div class="card"><h2>Add new record</h2>
+<button class="btn" style="margin-top:0" onclick="openForm('journals')">+ Add Journal</button>
+<button class="btn" style="margin-top:0" onclick="openForm('conferences')">+ Add Conference</button>
+<button class="btn" style="margin-top:0" onclick="openForm('books')">+ Add Book / Book Chapter</button></div>
+
+<div class="card"><h2>3. Results</h2>
+<div class="tabs" id="rtabs"></div>
+<button class="btn s" style="margin-top:0" onclick="dlAll()">Download all results (Excel, 4 sheets)</button>
+<span class="m" id="total"></span></div>
+<div id="res"></div>
+<div id="modal" style="display:none;position:fixed;inset:0;background:#0009;overflow:auto;padding:12px;z-index:5">
+<div class="card" style="max-width:820px;margin:20px auto"><h2 id="mt"></h2><div class="g" id="form"></div>
+<button class="btn" onclick="addOne()">Save record</button><button class="btn s" onclick="closeForm()">Cancel</button></div></div>
+<div id="msg"></div>
+
+<script>
+// ===== PASTE YOUR SUPABASE DETAILS HERE (between the quotes) =====
+const SB_URL = 'https://nwrmufvmdmysostkcoct.supabase.co';   // e.g. 'https://abcdxyz.supabase.co'
+const SB_KEY = 'sb_publishable_ADuLIhf6XiIPD6jjkPROmA_-d_xHHqw';   // e.g. 'sb_publishable_...'
+// =================================================================
+const T={
+ journals:{label:'Journals',yk:'pub_date',f:[['deptt','Deptt'],['author_name','Author Name'],['glb_auth_name','GLB Auth Name'],['all_author','All Author'],['pub_date','Date of Publication'],['title','Title'],['venue','Name of Journal/Conference/Book'],['indexing','Indexing'],['link','Link']]},
+ conferences:{label:'Conferences',yk:'pub_year',f:[['deptt','Deptt'],['author_name','Author Name'],['glb_auth_name','GLB Auth Name'],['all_author','All Other Author'],['pub_year','Year of Publications'],['pub_type','Journal/Conf/Book/Book Chapter/'],['title','Title'],['link','Link'],['doi','DOI'],['publisher','Publisher'],['indexing','Indexing']]},
+ books:{label:'Books & Book Chapters',yk:'pub_year',f:[['deptt','Deptt'],['author_name','Author Name'],['all_author','Co Author'],['pub_year','Year of Publications'],['pub_type','Journal/Conf/Book/Book Chapter/'],['title','Title'],['link','Link'],['publisher','Publisher'],['indexing','Indexing']]}
+};
+const ALIAS={coauthor:'all_author',allauthor:'all_author',allotherauthor:'all_author',yearofpublication:'pub_year',yearofpublications:'pub_year',dateofpublication:'pub_date',nameofjournalconferencebook:'venue',journalconfbookbookchapter:'pub_type'};
+const norm=s=>String(s).toLowerCase().replace(/[^a-z0-9]/g,'');
+const $=id=>document.getElementById(id);
+let tab='journals',sb=null,D={journals:[],conferences:[],books:[]},R={};
+
+function msg(t){const m=$('msg');m.textContent=t;m.style.display='block';clearTimeout(m._t);m._t=setTimeout(()=>m.style.display='none',4500)}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function yearOf(r,t=tab){const m=String(r[T[t].yk]||'').match(/(19|20)\d\d/);return m?+m[0]:null}
+
+function tabs(){$('tabs').innerHTML=Object.keys(T).map(k=>`<button class="${k==tab?'on':''}" onclick="setTab('${k}')">${T[k].label}</button>`).join('');rtabs()}
+function setTab(k){tab=k;tabs()}
+const VIEWS={journal:['journals'],conf:['conferences'],book:['books','chapters'],all:['journals','conferences','books','chapters'],dup:[]};
+const VL={journal:'Journal',conf:'Conference',book:'Book & Book Chapter',all:'All',dup:'Find Duplicates'};let view='all';
+function rtabs(){$('rtabs').innerHTML=Object.keys(VL).map(k=>`<button class="${k==view?'on':''}" onclick="setView('${k}')">${VL[k]}</button>`).join('')}
+function setView(v){view=v;rtabs();search()}
+const TYPES={conferences:['Conference','Journal','Book','Book Chapter'],books:['Book','Book Chapter']};let ft='journals';
+let eid=null;
+function openForm(t,rec){ft=t;eid=rec?rec.id:null;$('mt').textContent=(rec?'Edit ':'Add ')+(t=='books'?'Book / Book Chapter':T[t].label.replace(/s$/,''));
+ $('form').innerHTML='<div><label>S.No</label><input value="(auto)" disabled></div>'+T[t].f.map(([k,l])=>k=='pub_type'?
+  `<div><label>${l}</label><select id="f_${k}">${TYPES[t].map(o=>`<option>${o}</option>`).join('')}</select></div>`:
+  `<div><label>${l}</label><input id="f_${k}"></div>`).join('');
+ if(rec)T[t].f.forEach(([k])=>{const el=$('f_'+k),v=rec[k]??'';if(el.tagName=='SELECT'&&v&&![...el.options].some(o=>o.value==v))el.add(new Option(v,v));el.value=v});
+ $('modal').style.display='block'}
+function closeForm(){$('modal').style.display='none'}
+
+function mk(u,k){u=(u||'').trim().replace(/\/+$/,'').replace(/\/rest\/v1$/,'');k=(k||'').trim();
+ return(/^https:\/\/[^\s]+$/.test(u)&&k)?{u,k}:null}
+function hd(extra){const h={apikey:sb.k,'Content-Type':'application/json',...extra};if(sb.k.startsWith('eyJ'))h.Authorization='Bearer '+sb.k;return h}
+async function chk(r){if(r.ok)return;let m=r.status+' '+r.statusText;try{const j=await r.json();m=j.message||j.hint||m}catch(e){}
+ if(r.status==404||/relation|schema cache/i.test(m))m+=' (run supabase_setup.sql first)';
+ if(r.status==401||r.status==403)m+=' (check the key and the policies in supabase_setup.sql)';throw new Error(m)}
+async function ins(t,rows){let r;try{r=await fetch(sb.u+'/rest/v1/'+t,{method:'POST',headers:hd({Prefer:'return=minimal'}),body:JSON.stringify(rows)})}
+ catch(e){throw new Error('Cannot reach Supabase. Check the Project URL and internet.')}await chk(r)}
+function connect(){sb=mk($('url').value,$('key').value);if(!sb)return msg('Enter the Project URL (https://xxxx.supabase.co) and the key');
+ try{localStorage.setItem('sbcfg',JSON.stringify({u:sb.u,k:sb.k}))}catch(e){}refresh()}
+async function load(t){let all=[],from=0;for(;;){let r;
+ try{r=await fetch(`${sb.u}/rest/v1/${t}?select=*&order=id.asc&limit=1000&offset=${from}`,{headers:hd()})}
+ catch(e){throw new Error('Cannot reach Supabase. Check the Project URL and internet.')}
+ await chk(r);const data=await r.json();all=all.concat(data);if(data.length<1000)break;from+=1000}D[t]=all}
+async function refresh(){if(!sb)return msg('Connect to Supabase first');
+ try{for(const t in T)await load(t);msg('Connected. Records loaded.');search()}catch(e){msg('Error: '+e.message)}}
+
+const SEC=[
+ {id:'journals',label:'Journals',src:'journals',ok:r=>true},
+ {id:'conferences',label:'Conferences',src:'conferences',ok:r=>true},
+ {id:'books',label:'Books',src:'books',ok:r=>!/chapter/i.test(r.pub_type||'')},
+ {id:'chapters',label:'Book Chapters',src:'books',ok:r=>/chapter/i.test(r.pub_type||'')}];
+function match(r){const g=id=>$(id).value.trim().toLowerCase(),n=g('q_name'),fr=+$('q_from').value||0,to=+$('q_to').value||9999,
+ ti=g('q_title'),de=g('q_dept'),ix=g('q_idx'),y=r.year||0;
+ if(n&&![r.author_name,r.glb_auth_name,r.all_author].join(' ').toLowerCase().includes(n))return false;
+ if((fr||to<9999)&&(y<fr||y>to))return false;
+ if(ti&&!(r.title||'').toLowerCase().includes(ti))return false;
+ if(de&&!(r.deptt||'').toLowerCase().includes(de))return false;
+ if(ix&&!(r.indexing||'').toLowerCase().includes(ix))return false;return true}
+function search(){let tot=0;$('res').innerHTML=SEC.map(S=>{
+  const all=D[S.src].filter(S.ok);R[S.id]=all.filter(match);tot+=R[S.id].length;const f=T[S.src].f;
+  if(!VIEWS[view].includes(S.id))return '';
+  return `<div class="card"><h2>${S.label} <span class="m">(${R[S.id].length} of ${all.length})</span></h2>
+  <button class="btn s" style="margin-top:0" onclick="dl('${S.id}','xlsx')">Excel</button>
+  <button class="btn s" style="margin-top:0" onclick="dl('${S.id}','csv')">CSV</button>
+  <div class="w" style="margin-top:10px"><table><tr><th>S.No</th>${f.map(x=>`<th>${x[1]}</th>`).join('')}<th>Actions</th></tr>`+
+  R[S.id].map((r,i)=>`<tr><td>${i+1}</td>`+f.map(([k])=>{const v=r[k];return `<td>${k=='link'&&v?`<a href="${esc(v)}" target="_blank" rel="noopener">link</a>`:esc(v)}</td>`}).join('')+`<td>${act(S.src,r.id)}</td></tr>`).join('')+
+  '</table></div></div>'}).join('');$('total').textContent=` Total found: ${tot}`;if(view=='dup')dups()}
+function clearQ(){['q_name','q_from','q_to','q_title','q_dept','q_idx'].forEach(i=>$(i).value='');search()}
+
+function build(obj,t=tab){const row={};T[t].f.forEach(([k])=>row[k]=(obj[k]??'').toString().trim());row.year=yearOf(row,t);return row}
+async function addOne(){if(!sb)return msg('Supabase is not set');const o={};T[ft].f.forEach(([k])=>o[k]=$('f_'+k).value);
+ if(!o.title.trim())return msg('Title is required');
+ try{if(eid){
+   if(!confirm('Save changes to this record?'))return;
+   if(!confirm('Final confirmation: the old data will be overwritten. Continue?'))return;
+   await mod(ft,eid,'PATCH',build(o,ft));msg('Record updated')}
+  else{await ins(ft,[build(o,ft)]);msg('Saved')}}catch(e){return msg('Error: '+e.message)}
+ closeForm();await load(ft);search()}
+function act(t,id){return `<button class="btn s" style="margin:0 4px 0 0;padding:3px 8px" onclick="editRec('${t}',${id})">Edit</button><button class="btn s" style="margin:0;padding:3px 8px;color:#d92d20;border-color:#d92d20" onclick="delRec('${t}',${id})">Delete</button>`}
+async function mod(t,id,method,body){let r;try{r=await fetch(`${sb.u}/rest/v1/${t}?id=eq.${id}`,{method,headers:hd({Prefer:'return=representation'}),body:body?JSON.stringify(body):undefined})}
+ catch(e){throw new Error('Cannot reach Supabase.')}await chk(r);const d=await r.json();
+ if(!d.length)throw new Error('Not allowed or record not found. Run supabase_edit_delete.sql in Supabase SQL Editor.')}
+function editRec(t,id){const r=D[t].find(x=>x.id==id);if(r)openForm(t,r)}
+async function delRec(t,id){const r=D[t].find(x=>x.id==id);if(!r)return;
+ if(!confirm('Delete this record?\n\n'+(r.title||'')+'\n'+(r.author_name||'')))return;
+ if(prompt('Second verification: type DELETE (capital letters) to permanently delete this record.')!=='DELETE')return msg('Delete cancelled');
+ try{await mod(t,id,'DELETE');msg('Record deleted');await load(t);search()}catch(e){msg('Error: '+e.message)}}
+function dups(){const m={},lab={journals:()=>'Journal',conferences:()=>'Conference',books:r=>/chapter/i.test(r.pub_type||'')?'Book Chapter':'Book'};
+ for(const t in D)D[t].forEach(r=>{const k=norm(r.title||'');if(k)(m[k]=m[k]||[]).push({t,r,l:lab[t](r)})});
+ const g=Object.values(m).filter(a=>a.length>1).sort((a,b)=>b.length-a.length);
+ $('total').textContent=` ${g.length} duplicate group(s), ${g.reduce((n,a)=>n+a.length,0)} records (same title, checked across Journals, Conferences, Books)`;
+ $('res').innerHTML=g.length?g.map((a,i)=>`<div class="card"><h2>Group ${i+1}: ${esc(a[0].r.title)} <span class="m">(${a.length} records)</span></h2><div class="w"><table><tr><th>Type</th><th>Deptt</th><th>Author Name</th><th>GLB Auth Name</th><th>Year</th><th>Indexing</th><th>Link</th><th>Actions</th></tr>`+
+  a.map(x=>`<tr><td>${x.l}</td><td>${esc(x.r.deptt)}</td><td>${esc(x.r.author_name)}</td><td>${esc(x.r.glb_auth_name)}</td><td>${x.r.year||''}</td><td>${esc(x.r.indexing)}</td><td>${x.r.link?`<a href="${esc(x.r.link)}" target="_blank" rel="noopener">link</a>`:''}</td><td>${act(x.t,x.r.id)}</td></tr>`).join('')+'</table></div></div>').join(''):'<div class="card">No duplicates found.</div>'}
+
+async function upload(){if(!sb)return msg('Connect first');const file=$('file').files[0];if(!file)return msg('Choose a file');
+ const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
+ const raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:'',raw:false});
+ const map={};T[tab].f.forEach(([k,l])=>{map[norm(k)]=k;map[norm(l)]=k});
+ const rows=raw.map(r=>{const o={};for(const h in r){const k=map[norm(h)]||map[ALIAS[norm(h)]]||ALIAS[norm(h)];
+   if(k&&T[tab].f.some(f=>f[0]==k))o[k]=r[h]}return build(o)}).filter(r=>r.title);
+ if(!rows.length)return msg('No valid rows found. Check column headings (use the template).');
+ $('upinfo').textContent=`Uploading ${rows.length} rows to ${T[tab].label}...`;
+ for(let i=0;i<rows.length;i+=500){try{await ins(tab,rows.slice(i,i+500))}catch(e){$('upinfo').textContent='Failed: '+e.message;return}}
+ $('upinfo').textContent=`Done: ${rows.length} rows uploaded.`;$('file').value='';await load(tab);search()}
+
+function labelled(rows,t){return rows.map((r,i)=>{const o={'S.No':i+1};T[t].f.forEach(([k,l])=>o[l]=r[k]??'');return o})}
+function template(){const ws=XLSX.utils.aoa_to_sheet([['S.No',...T[tab].f.map(x=>x[1])]]),wb=XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb,ws,T[tab].label.slice(0,30));XLSX.writeFile(wb,`${tab}_template.xlsx`)}
+function dl(id,type){const S=SEC.find(x=>x.id==id);if(!R[id]||!R[id].length)return msg('Nothing to download in '+S.label);
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(labelled(R[id],S.src)),S.label);
+ XLSX.writeFile(wb,`${id}_results.${type}`,{bookType:type})}
+function dlAll(){const wb=XLSX.utils.book_new();SEC.forEach(S=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(labelled(R[S.id]||[],S.src)),S.label));
+ XLSX.writeFile(wb,'all_publications.xlsx')}
+
+tabs();
+if(SB_URL&&SB_KEY){sb=mk(SB_URL,SB_KEY);if(sb)refresh();else $('cfgwarn').style.display='block'}else $('cfgwarn').style.display='block'
+</script></body></html>
