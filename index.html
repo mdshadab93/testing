@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Publication Records Manager</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@500;600&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>:root{--bg:#fafbff;--hg1:#fff;--hg2:#e8ebff;--hg3:#f4e9ff;--card:#fff;--tx:#1b1b3a;--mut:#636485;--bd:#e0e2f0;--ac:#4338ca;--onac:#fff;--acs:#eceeff;--head:#f6f7fd;--hov:#f3f4ff;--dg:#e11d48;--l:32%;--gold:#fbbf24;--or:#f59e0b}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0e0f22;--hg1:#171934;--hg2:#242863;--hg3:#2e2370;--card:#171934;--tx:#e8e9fb;--mut:#9a9cc4;--bd:#2a2d52;--ac:#a5b4fc;--onac:#12133a;--acs:#25285a;--head:#1d2042;--hov:#212450;--dg:#fb7185;--l:75%;--gold:#fbbf24;--or:#f59e0b}}
+:root[data-theme=dark]{--bg:#0e0f22;--hg1:#171934;--hg2:#242863;--hg3:#2e2370;--card:#171934;--tx:#e8e9fb;--mut:#9a9cc4;--bd:#2a2d52;--ac:#a5b4fc;--onac:#12133a;--acs:#25285a;--head:#1d2042;--hov:#212450;--dg:#fb7185;--l:75%;--gold:#fbbf24;--or:#f59e0b}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;font:14px/1.5 "Public Sans","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+.hero{background:repeating-linear-gradient(0deg,#ffffff0b 0 1px,transparent 1px 30px),linear-gradient(135deg,#3f1d0b,#6b3418);color:#fff;padding:30px 20px 84px;border-bottom:5px solid var(--gold)}
+.hin{max-width:1280px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.inst{margin:0 0 4px;font-size:13px;opacity:.8}
+h1{font:600 38px/1.1 Newsreader,Georgia,serif;margin:0;letter-spacing:-.01em}.sub{margin:8px 0 0;opacity:.85;max-width:46ch}
+h2{font:600 17px Newsreader,Georgia,serif;margin:0}h3{font:600 20px/1.25 Newsreader,Georgia,serif;margin:0 0 14px}
+.acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px 60px}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:-50px 0 16px}
+.st{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;text-align:left;cursor:pointer;color:var(--tx);font:inherit;transition:transform .18s,box-shadow .18s,border-color .18s;border-bottom:3px solid transparent;box-shadow:0 6px 18px #14123a16}
+.st:hover{transform:translateY(-3px);box-shadow:0 12px 26px #14123a2e}.st.on{border-color:var(--ac);border-bottom-color:var(--or)}
+.st b{display:block;font:600 34px/1.1 Newsreader,Georgia,serif;color:var(--ac);min-height:37px}.st span{font-size:12.5px;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:16px}
+label{font-size:12px;font-weight:600;color:var(--mut);display:block;margin-bottom:4px}
+input,select{padding:9px 11px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);width:100%;font:inherit;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus{outline:0;border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}button:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.btn{padding:8px 15px;border:1px solid var(--ac);border-radius:8px;background:var(--ac);color:var(--onac);cursor:pointer;font:inherit;font-weight:600;transition:transform .12s,background .15s}.btn:active{transform:scale(.97)}
+.btn.s{background:transparent;color:var(--ac)}.btn.s:hover{background:var(--acs)}
+.btn.sm{padding:3px 10px;font-size:12px}.btn.danger{color:var(--dg);border-color:var(--dg)}
+.btn.link{border:0;background:none;color:var(--ac);padding:8px 4px}
+.btn.gh{background:#ffffff1a;border-color:#ffffff55;color:#fff}.btn.gh:hover{background:#ffffff30}
+.btn.gold{background:var(--gold,#e9a93a);border-color:transparent;color:#2b1d00}
+.srch{display:grid;grid-template-columns:2fr 2fr 1.3fr 1fr 1fr;gap:12px}
+.more{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}.more .m{grid-column:1/-1}
+.bar{display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap}.sp{flex:1}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--bd);background:var(--card);border-radius:99px;padding:5px 12px;font:inherit;font-size:12px;cursor:pointer;color:var(--tx);transition:.15s}.chip:hover{background:var(--acs);border-color:var(--ac)}
+.m{color:var(--mut);font-size:12px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs button{padding:7px 13px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;cursor:pointer;font:inherit}
+.tabs button.on{background:var(--acs);color:var(--ac);border-color:var(--ac);font-weight:600}
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.ch h2 .m{font:400 12px "Public Sans",sans-serif;margin-left:8px}.dls{display:flex;gap:6px}
+.w{overflow:auto;max-height:65vh;border:1px solid var(--bd);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:9px 11px;text-align:left;vertical-align:top;border-bottom:1px solid var(--bd)}
+th{position:sticky;top:0;background:var(--head);font-weight:600;white-space:nowrap;z-index:1;user-select:none}
+th.so{cursor:pointer}th.so:hover{color:var(--ac)}th i{font-style:normal;font-size:9px;margin-left:5px;color:var(--or)}
+td{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.t{min-width:260px;max-width:380px;white-space:normal;font-weight:500}td.t div{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}td.act{white-space:nowrap;overflow:visible}
+tr.rw{cursor:pointer}tr.rw:hover td{background:var(--hov)}tr.rw:hover td:first-child{box-shadow:inset 3px 0 var(--or)}tr:last-child td{border-bottom:0}
+.bdg{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:600;background:hsl(var(--h) 65% 48% / .16);color:hsl(var(--h) 55% var(--l))}
+.empty{padding:28px 10px;text-align:center;color:var(--mut)}
+.sk{height:16px;border-radius:6px;margin:12px 0;background:linear-gradient(90deg,var(--head),var(--bd),var(--head));background-size:200% 100%;animation:sh 1.2s infinite}@keyframes sh{to{background-position:-200% 0}}
+a{color:var(--ac)}
+.pw{position:relative}.pop{position:absolute;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:6px;min-width:210px;box-shadow:0 10px 28px #0003;z-index:6;display:flex;flex-direction:column}
+.pop button{text-align:left;padding:9px 11px;border:0;background:none;color:var(--tx);cursor:pointer;border-radius:6px;font:inherit}.pop button:hover{background:var(--acs)}
+.ov{display:none;position:fixed;inset:0;background:#14123aa0;backdrop-filter:blur(3px);overflow:auto;padding:12px;z-index:10}
+.dlg{max-width:860px;margin:24px auto}.dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.x{border:0;background:none;font-size:24px;line-height:1;color:var(--mut);cursor:pointer}
+.sec{margin-top:16px;padding-top:14px;border-top:1px solid var(--bd)}
+input[type=file]{border:2px dashed var(--bd);padding:18px;background:var(--head)}
+.scrim{position:fixed;inset:0;background:#14123a66;opacity:0;pointer-events:none;transition:opacity .25s;z-index:11}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(460px,100%);background:var(--card);border-left:1px solid var(--bd);padding:22px;overflow:auto;z-index:12;transform:translateX(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);box-shadow:-14px 0 40px #0003}
+.dro .drawer{transform:none}.dro .scrim{opacity:1;pointer-events:auto}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--bd)}.kv span{font-size:12px;font-weight:600;color:var(--mut)}.kv div{word-break:break-word}
+#msg{position:fixed;right:16px;bottom:16px;background:var(--tx);color:var(--bg);padding:10px 14px;border-radius:9px;display:none;max-width:80%;z-index:20}
+@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}.srch,.more{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.stats{grid-template-columns:1fr 1fr}.srch,.more{grid-template-columns:1fr}.wrap{padding:0 12px 50px}h1{font-size:30px}.kv{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.hero{position:relative;overflow:hidden;background:repeating-linear-gradient(0deg,#ffffff0a 0 1px,transparent 1px 30px),linear-gradient(120deg,#1e1b4b,#4338ca,#7c3aed,#4338ca,#1e1b4b);background-size:100% 100%,300% 300%;animation:flow 18s ease-in-out infinite}
+.hero::before,.hero::after{content:"";position:absolute;border-radius:50%;filter:blur(40px);opacity:.5;pointer-events:none}
+.hero::before{width:280px;height:280px;background:#fbbf24;right:8%;top:-120px;animation:fl 9s ease-in-out infinite}
+.hero::after{width:240px;height:240px;background:#ec4899;left:30%;bottom:-140px;animation:fl 11s ease-in-out infinite reverse}
+.hin{position:relative;z-index:1}
+@keyframes flow{50%{background-position:0 0,100% 100%}}@keyframes fl{50%{transform:translate(-30px,24px) scale(1.15)}}
+@keyframes up{from{opacity:0;transform:translateY(14px)}}@keyframes rin{from{opacity:0;transform:translateX(-10px)}}
+@keyframes pop{from{opacity:0;transform:scale(.95) translateY(8px)}}@keyframes toast{from{opacity:0;transform:translateY(14px)}}@keyframes rp{to{transform:scale(3);opacity:0}}
+.first .st{animation:up .5s both;animation-delay:calc(var(--i)*70ms)}
+.anim .card{animation:up .4s both}
+.anim tbody tr{animation:rin .35s both;animation-delay:calc(var(--i)*28ms)}
+.dlg{animation:pop .25s}#msg{animation:toast .3s}
+.btn{position:relative;overflow:hidden}.rp{position:absolute;border-radius:50%;background:#fff6;width:40px;height:40px;margin:-20px 0 0 -20px;transform:scale(0);animation:rp .55s ease-out;pointer-events:none}
+.st{position:relative;overflow:hidden}.st::before{content:"";position:absolute;inset:0;background:radial-gradient(170px circle at var(--mx,50%) var(--my,50%),var(--acs),transparent);opacity:0;transition:opacity .2s}.st:hover::before{opacity:1}.st b,.st span{position:relative}
+.bdg{transition:transform .15s}tr.rw:hover .bdg{transform:scale(1.08)}th i{display:inline-block}
+.chip:hover{transform:translateY(-1px)}.chip:active{transform:scale(.94)}
+.hero{color:var(--tx);background:repeating-linear-gradient(0deg,#4338ca0d 0 1px,transparent 1px 30px),linear-gradient(120deg,var(--hg1),var(--hg2),var(--hg3),var(--hg2),var(--hg1));background-size:100% 100%,300% 300%}
+.hero::before{opacity:.35}.hero::after{opacity:.25}
+.inst{color:var(--mut);opacity:1}.sub{color:var(--mut);opacity:1}h1{color:var(--ac)}
+.btn.gh{background:var(--card);border-color:var(--bd);color:var(--ac)}.btn.gh:hover{background:var(--acs);border-color:var(--ac)}
+.hero .btn.gh .rp{background:#4338ca33}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.sw{position:relative;display:inline-block;width:34px;height:20px;margin:0}.sw input{opacity:0;width:0;height:0;position:absolute}.sw i{position:absolute;inset:0;background:var(--bd);border-radius:99px;transition:.2s;cursor:pointer}.sw i::after{content:"";position:absolute;width:14px;height:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}.sw input:checked+i{background:var(--ac)}.sw input:checked+i::after{transform:translateX(14px)}
+.pw2{min-width:110px;padding:5px 8px}
+#dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px;margin-bottom:16px}
+#dash .card{margin:0;transition:transform .2s,box-shadow .2s}#dash .card:hover{transform:translateY(-3px);box-shadow:0 12px 26px #14123a22}
+#dash h2{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:2px}#dash .m{margin-bottom:12px}
+.dnw{display:flex;align-items:center;gap:14px}.dn{width:118px;height:118px;flex:none}.dn text{font:600 7px Newsreader,Georgia,serif;fill:var(--tx)}
+.seg{cursor:pointer;transition:stroke-width .15s}.seg:hover{stroke-width:7.5}
+.lgs{display:flex;flex-direction:column;gap:2px;flex:1}.lg{display:flex;align-items:center;gap:8px;border:0;background:none;color:var(--tx);font:inherit;font-size:12.5px;padding:3px 6px;border-radius:6px;cursor:pointer;text-align:left}
+.lg i{width:10px;height:10px;border-radius:50%}.lg b{margin-left:auto}.lg:hover,.lg.on{background:var(--acs)}
+.vbs{display:flex;align-items:flex-end;gap:5px;height:150px}
+.vb{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;border:0;background:none;cursor:pointer;color:var(--mut);font:inherit;font-size:10px;padding:0}
+.vb i{display:block;width:100%;height:var(--h);min-height:3px;border-radius:5px 5px 0 0;background:linear-gradient(var(--ac),#7c3aed);transition:filter .15s}.vb:hover i{filter:brightness(1.25)}
+.vb b{opacity:0;transition:opacity .15s;color:var(--tx);font-size:11px}.vb:hover b{opacity:1}
+.ar{display:grid;grid-template-columns:104px 1fr 22px;gap:8px;align-items:center;width:100%;border:0;background:none;color:var(--tx);font:inherit;font-size:12.5px;padding:5px 4px;border-radius:7px;cursor:pointer;text-align:left}.ar:hover{background:var(--acs)}
+.ar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tr{height:8px;background:var(--head);border-radius:9px;overflow:hidden}.tr i{display:block;height:100%;width:var(--w);background:linear-gradient(90deg,var(--ac),var(--or));border-radius:9px}
+.lt{display:block;width:100%;border:0;background:none;color:var(--tx);font:inherit;text-align:left;padding:7px 8px;border-radius:7px;cursor:pointer;transition:background .15s,transform .15s}.lt:hover{background:var(--acs);transform:translateX(4px)}
+.lt div{font-size:13px;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.lt span{font-size:11.5px;color:var(--mut)}
+.go .seg{stroke-dasharray:0 100;animation:dr .9s cubic-bezier(.3,.7,.2,1) forwards}.go .vb i{animation:grow .6s both;animation-delay:calc(var(--i)*45ms)}
+.go .tr i{animation:gw .7s both;animation-delay:calc(var(--i)*70ms)}.go .card{animation:up .45s both}.go .card:nth-child(2){animation-delay:.07s}.go .card:nth-child(3){animation-delay:.14s}.go .card:nth-child(4){animation-delay:.21s}
+@keyframes dr{to{stroke-dasharray:var(--p) var(--q)}}@keyframes grow{from{height:0}}@keyframes gw{from{width:0}}@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.shake{animation:shake .35s}.meter{height:6px;background:var(--head);border-radius:9px;margin:8px 0 4px;overflow:hidden}.meter i{display:block;height:100%;width:0;border-radius:9px;transition:width .3s,background .3s}
+.ms{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}.ms .card{margin:0;text-align:center;padding:12px}.ms b{display:block;font:600 30px/1.1 Newsreader,Georgia,serif;color:var(--ac)}.ms span{font-size:12px;color:var(--mut)}
+.nuw{background:var(--head)}.up{display:flex;gap:6px;align-items:center}.up .chip{flex:none}
+.ugrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.uc{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px;animation:up .4s both;animation-delay:calc(var(--i)*60ms);transition:transform .2s,box-shadow .2s,opacity .2s,border-color .2s}
+.uc:hover{transform:translateY(-3px);box-shadow:0 12px 26px #14123a22;border-color:var(--ac)}.uc.off{opacity:.62}
+.uh{display:flex;align-items:center;gap:10px}.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;background:hsl(var(--h) 55% 48%);flex:none}
+.un{flex:1;min-width:0}.un b{display:block;overflow:hidden;text-overflow:ellipsis}.uc .meter{margin:0}.uc .meter i{background:linear-gradient(90deg,var(--ac),var(--or))}
+.pill{border:0;border-radius:99px;padding:4px 11px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;background:hsl(0 70% 50%/.15);color:hsl(0 65% var(--l))}.pill.on{background:hsl(150 60% 45%/.18);color:hsl(150 55% var(--l))}.pill:active{transform:scale(.92)}
+.fcs{display:flex;flex-wrap:wrap;gap:6px}.fc{border:1px solid var(--bd);background:var(--card);color:var(--mut);border-radius:99px;padding:4px 11px;font:inherit;font-size:12px;cursor:pointer;transition:.18s}.fc:hover{border-color:var(--ac)}.fc.on{background:var(--ac);border-color:var(--ac);color:var(--onac);font-weight:600}.fc:active{transform:scale(.9)}
+.pre{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.dirty{font-size:12px;color:var(--or);font-weight:600;animation:up .25s}
+
+.fp{padding:0}.fpbg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.fpbg i{position:absolute;border-radius:50%;filter:blur(50px);opacity:.35;animation:fl 14s ease-in-out infinite}
+.fpbg i:nth-child(1){width:340px;height:340px;background:#6366f1;left:-80px;top:-60px}.fpbg i:nth-child(2){width:300px;height:300px;background:#f59e0b;right:-60px;top:20%;animation-delay:-4s}
+.fpbg i:nth-child(3){width:260px;height:260px;background:#0ea5e9;left:30%;bottom:-90px;animation-delay:-8s}.fpbg i:nth-child(4){width:120px;height:120px;background:#10b981;left:12%;top:55%;animation-delay:-2s}
+.fpbg i:nth-child(5){width:90px;height:90px;background:#ec4899;right:30%;top:8%;animation-delay:-6s}.fpbg i:nth-child(6){width:150px;height:150px;background:#8b5cf6;right:8%;bottom:6%;animation-delay:-10s}
+@keyframes fl{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-34px) scale(1.12)}}
+.fpw{position:relative;max-width:1180px;margin:0 auto;padding:44px 20px;display:grid;grid-template-columns:1.25fr 1fr;gap:34px;align-items:start;min-height:100%}
+.fpl{animation:up .6s both}.fpl h1{font-size:44px;position:relative;display:inline-block}.fpl .ul{display:block;height:5px;width:0;border-radius:9px;background:linear-gradient(90deg,var(--gold),var(--ac));margin-top:8px;animation:gw2 1s .4s forwards}
+@keyframes gw2{to{width:100%}}.fpl .sub{max-width:52ch;color:var(--mut);opacity:1;font-size:15px}.fpl .inst{color:var(--mut);opacity:1;font-weight:600;letter-spacing:.03em;text-transform:uppercase;font-size:12px}
+.pcs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:26px}
+.pc1{background:var(--card);border:1px solid var(--bd);border-top:4px solid var(--c);border-radius:14px;padding:16px;animation:up .6s both;animation-delay:calc(.25s + var(--i)*.12s);transition:transform .22s,box-shadow .22s}
+.pc1:hover{transform:translateY(-6px) rotate(-.4deg);box-shadow:0 16px 32px #14123a30}.pc1 h4{font:600 19px Newsreader,Georgia,serif;margin:8px 0 4px}.pc1 p{margin:0;color:var(--mut);font-size:13px}
+.pc1 .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;background:color-mix(in srgb,var(--c) 18%,transparent);animation:bob 3.2s ease-in-out infinite;animation-delay:calc(var(--i)*.4s)}
+@keyframes bob{50%{transform:translateY(-5px) scale(1.06)}}
+.fpf{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.fpf span{font-size:12px;border:1px solid var(--bd);background:var(--card);border-radius:99px;padding:5px 12px;color:var(--mut);animation:up .5s 1s both}
+.fpr{animation:up .6s .15s both;position:sticky;top:24px}.lc{padding:18px;box-shadow:0 18px 44px #14123a30;margin:0}
+.lt2{display:flex;gap:4px;background:var(--head);padding:4px;border-radius:10px;margin-bottom:16px}.lt2 button{flex:1;border:0;background:none;color:var(--mut);font:inherit;font-size:12.5px;font-weight:600;padding:8px 4px;border-radius:7px;cursor:pointer;transition:.2s}
+.lt2 button.on{background:var(--card);color:var(--ac);box-shadow:0 2px 8px #14123a22}.lvw{animation:up .35s both}
+.lc a{color:var(--ac);font-weight:600}.rcb{margin-top:14px;padding:12px;border:1px dashed var(--or);border-radius:10px;background:var(--head);display:flex;flex-direction:column;gap:6px;align-items:flex-start;animation:up .4s both}
+.rcb code{font:600 20px/1.2 ui-monospace,Consolas,monospace;letter-spacing:.08em;color:var(--ac)}
+@media(max-width:860px){.fpw{grid-template-columns:1fr}.fpr{position:static;order:-1}.fpl h1{font-size:34px}}@media(max-width:520px){.pcs{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.fpbg i,.pc1 .ic{animation:none}}
+
+#dash{display:grid;grid-template-columns:minmax(260px,1fr) minmax(330px,1.5fr) minmax(280px,1.1fr) minmax(320px,1.4fr);gap:14px;align-items:stretch;overflow-x:auto;padding:2px 2px 10px;scroll-snap-type:x proximity;margin-bottom:10px}
+#dash .card{display:flex;flex-direction:column;min-height:250px;padding:12px 14px;scroll-snap-align:start}
+#dash h2{font-size:16px}#dash .m{margin-bottom:6px}
+#dash .dnw{flex:1;flex-direction:row;justify-content:flex-start;gap:10px}#dash .dn{width:96px;height:96px}#dash .lgs{flex:1;width:auto;gap:0}#dash .lg{padding:2px 4px;font-size:12px}
+#dash .vbs{flex:1;height:auto;min-height:130px;margin-top:2px;gap:3px}#dash .vb span{font-size:9px;text-align:center;line-height:1.1;word-spacing:100vw}
+#dash .ar{flex:1;padding:1px 3px;grid-template-columns:86px 1fr 22px;font-size:12px}#dash .lt{flex:1;display:flex;flex-direction:column;justify-content:center;border-bottom:1px solid var(--bd);border-radius:0;padding:2px 6px}#dash .lt:last-child{border-bottom:0}
+#dash .lt div{-webkit-line-clamp:1;line-clamp:1;font-size:12.5px}#dash .lt span{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#backbar{display:flex;align-items:center;gap:10px;margin:0 0 10px}#backbar[hidden]{display:none}
+.btn.back{display:inline-flex;align-items:center;gap:6px;animation:rin .3s both}.btn.back:hover{transform:translateX(-3px)}
+.tb{border-collapse:collapse;font-size:13px}.tb td{padding:6px 8px;border-bottom:1px solid var(--bd)}#fcr{max-height:50vh;overflow:auto}
+
+#dash{grid-template-columns:minmax(260px,440px);overflow-x:visible}#dash .card{min-height:0}
+#dash{display:block;overflow:visible;padding:0;margin-bottom:10px}
+.ixr{display:block;padding:16px 18px 18px!important;min-height:0!important;margin:0;background:var(--card)}
+.ixt{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}.ixt h2{font-size:17px}.ixt .m{display:block;margin:0!important}
+.ixb{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px;padding:0}
+.ixs{--h:235;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;height:auto;padding:12px 14px 14px;border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);cursor:pointer;font:inherit;text-align:left;transition:transform .15s,box-shadow .2s,border-color .2s,background .2s,opacity .25s}
+.ixs::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:hsl(var(--h) 65% 52%)}
+.ixs::after{content:"";position:absolute;inset:0;background:radial-gradient(140px circle at var(--mx,50%) var(--my,50%),hsl(var(--h) 70% 55%/.14),transparent);opacity:0;transition:opacity .2s;pointer-events:none}.ixs:hover::after{opacity:1}
+.ixs:hover{transform:translateY(-2px);border-color:hsl(var(--h) 60% 55%);box-shadow:0 8px 20px hsl(var(--h) 60% 30%/.18)}
+.ixs:active{transform:scale(.98)}
+.ixl{display:contents}
+.ixl b{order:1;font-weight:600;font-size:12.5px;color:var(--mut);letter-spacing:.01em;display:flex;align-items:center;gap:6px}
+.ixl b::before{content:"";width:8px;height:8px;border-radius:50%;background:hsl(var(--h) 65% 52%);flex:none}
+.ixn{order:2;font:600 30px/1.15 Newsreader,Georgia,serif;font-style:normal;color:var(--tx);min-width:0;height:auto;padding:0;background:none;display:block;margin-top:2px}
+.ixl small{order:3;font-size:12px;color:var(--mut);opacity:1}.ixl small u{text-decoration:none}
+.ixk{order:4;align-self:stretch;height:4px;border-radius:99px;background:var(--bd);margin-top:8px;overflow:hidden}
+.ixk em{display:block;height:100%;width:var(--p,100%);border-radius:inherit;background:hsl(var(--h) 65% 52%);transform-origin:left;animation:gw .6s cubic-bezier(.2,.8,.2,1) both}
+.ixs.on{border-color:hsl(var(--h) 65% 50%);background:hsl(var(--h) 70% 50%/.09);box-shadow:0 0 0 2px hsl(var(--h) 65% 50%/.35)}
+.ixs.on::after{content:"\2713";position:absolute;inset:auto;right:10px;top:9px;width:18px;height:18px;border-radius:50%;background:hsl(var(--h) 65% 48%);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;opacity:1}
+.ixs.dim{opacity:.45}.ixs.dim:hover{opacity:1}
+.ixs.all{--h:235}
+.go .ixs{animation:up .5s both;animation-delay:calc(var(--i)*60ms)}
+@media(max-width:700px){.ixb{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:reduce){.ixs{transition:none}}
+.fcl{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;max-height:300px;overflow:auto;padding:2px}
+.fci{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);font:inherit;font-size:13px;cursor:pointer;text-align:left;transition:.15s}
+.fci:hover{border-color:var(--ac);background:var(--acs)}.fci span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fci b{flex:none;min-width:26px;text-align:center;padding:2px 8px;border-radius:99px;background:var(--acs);color:var(--ac);font-size:12px}
+.fci.on{border-color:var(--ac);background:var(--acs);box-shadow:0 0 0 2px var(--ac)}
+.chip.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+</style></head><body>
+<header class="hero"><div class="hin"><div><p class="inst">G.L. Bajaj Institute of Technology &amp; Management</p><h1>Publication Records</h1><p class="sub" id="hsub">Journals, conferences, books and chapters, searchable in one place.</p></div>
+<div class="acts"><button class="btn gh" id="setb" onclick="openSettings()">Settings</button><button class="btn gh" id="who" onclick="logout()">Sign out</button><button class="btn gh" onclick="theme()">Light / Dark</button><button class="btn gh" id="impb" onclick="openImport()">Import from Excel</button><button class="btn gh" id="fcb" onclick="openFc()">Faculty check</button>
+<div class="pw" id="addw"><button class="btn gold" onclick="togglePop(event)">+ Add record</button>
+<div class="pop" id="addpop" hidden><button onclick="openForm('journals')">Journal</button><button onclick="openForm('conferences')">Conference</button><button onclick="openForm('books',null,'Book')">Book</button><button onclick="openForm('books',null,'Book Chapter')">Book Chapter</button><button onclick="openForm('patents')">Patent</button></div></div></div></div></header>
+<div class="wrap"><div class="stats" id="rtabs"></div><div id="backbar" hidden><button class="btn s back" onclick="goBack()">&#8592; Back</button><span class="m" id="bkinfo"></span></div><div id="dash"></div>
+<div class="card" id="cfgwarn" style="display:none"><b>Supabase is not set.</b> Open this file in Notepad and paste your Project URL and key in <code>SB_URL</code> and <code>SB_KEY</code> near the top of the script.</div>
+
+<section class="card">
+<div class="srch">
+<div><label>Name / Faculty</label><input id="q_name" list="facl" placeholder="Author, faculty or co-author"><datalist id="facl"></datalist></div>
+<div><label>Title / keyword</label><input id="q_title"></div>
+<div><label>Session</label><select id="q_ses"><option value="">Any session</option></select></div>
+<div><label>Date from</label><input id="q_from" type="date"></div>
+<div><label>Date to</label><input id="q_to" type="date"></div></div>
+<div class="more" id="more" hidden>
+<div><label>Month</label><select id="q_month"><option value="">Any month</option><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
+<div><label>Department</label><input id="q_dept"></div>
+<div><label>Indexing</label><input id="q_idx"></div>
+<div><label>Patent date used for date search</label><select id="q_dtype"><option value="">Any of the three dates</option><option value="filing_date">Date of filing</option><option value="published_date">Published date</option><option value="granted_date">Granted date</option></select></div>
+<div class="m">All filled filters must match. Month and dates are read from the date of publication (12-05-2024 is day-month-year; May 2024 also works). For patents they are read from the date of filing, published date or granted date, as chosen in the Patent date box. A record with only a month and year, or only a year, matches if any part of that month or year falls in the date range. Either date can be left empty.</div></div>
+<div class="bar"><button class="btn" onclick="search()">Search</button><button class="btn s" onclick="clearQ()">Clear</button>
+<span class="chips"><button class="chip" id="cay0" onclick="preset('cay0')">CAY</button><button class="chip" id="cay1" onclick="preset('cay1')">CAY-1</button><button class="chip" id="cay2" onclick="preset('cay2')">CAY-2</button><button class="chip" id="cay3" onclick="preset('cay3')">CAY-3</button><button class="chip" onclick="preset('yr')">This year</button><button class="chip" onclick="preset('m6')">Last 6 months</button></span><button class="btn link" id="moreb" onclick="toggleMore()">More filters</button><span class="sp"></span><button class="btn link" onclick="refresh()">Reload data</button></div>
+</section>
+
+<div class="rhead"><div class="m">Click a heading to sort. Click a row to see the full record.</div>
+<div><span class="m" id="total"></span> <button class="btn s sm" id="dlall" style="margin-left:8px" onclick="dlAll()">Download all (Excel)</button></div></div>
+<div id="res"></div>
+
+<div id="modal" class="ov"><div class="card dlg"><div class="dh"><h2 id="mt"></h2><button class="x" onclick="closeForm()" aria-label="Close">&times;</button></div><div class="g" id="form"></div>
+<div class="bar"><button class="btn" onclick="addOne()">Save record</button><button class="btn s" onclick="closeForm()">Cancel</button></div></div></div>
+
+<div id="imp" class="ov"><div class="card dlg"><div class="dh"><h2>Import from Excel</h2><button class="x" onclick="closeImport()" aria-label="Close">&times;</button></div>
+<div id="impm" class="tabs" style="margin-bottom:12px"><button data-m="all" onclick="impMode('all')">All data at once</button><button data-m="one" onclick="impMode('one')">Single sheet</button></div>
+<div id="impa">
+<p class="m" style="margin:0 0 10px">Choose your exported Excel file (for example <b>all_data_backup.xlsx</b>), or select several files together. Every sheet is detected automatically (Journals, Conferences, Books, Book Chapters) and imported in one go.</p>
+<label>Files (.xlsx, .xls or .csv)</label><input type="file" id="mfile" multiple accept=".xlsx,.xls,.csv" onchange="readAll()">
+<div id="mprev"></div>
+<div class="bar"><button class="btn" id="mgo" onclick="uploadAll()" disabled>Import all</button><label style="display:flex;align-items:center;gap:6px;margin:0;font-weight:500;color:var(--tx)"><input type="checkbox" id="mdup" checked style="width:auto;padding:0"> Skip records already stored</label><span class="m" id="minfo"></span></div>
+</div>
+<div id="imp1" hidden>
+<label>Record type</label><div class="tabs" id="tabs"></div>
+<div style="margin-top:12px"><label>File (.xlsx, .xls or .csv)</label><input type="file" id="file" accept=".xlsx,.xls,.csv" onchange="readFile()"></div>
+<div id="sheetbox" style="display:none;margin-top:10px"><label>Sheet</label><select id="sheet" onchange="loadSheet()"></select></div>
+<div id="map" style="margin-top:12px"></div>
+<div class="bar"><button class="btn" onclick="upload()">Import to Supabase</button><span class="m" id="upinfo"></span></div>
+<div class="sec"><label>Blank templates (with instructions and dropdowns)</label>
+<div class="bar" style="margin-top:4px"><button class="btn s sm" onclick="template('journals')">Journal</button><button class="btn s sm" onclick="template('conferences')">Conference</button><button class="btn s sm" onclick="template('books')">Book &amp; Book Chapter</button><button class="btn s sm" onclick="template('patents')">Patent</button></div>
+<div class="m" style="margin-top:8px">Any Excel or CSV layout works: columns can have any name or order. The app matches them to the selected type, and you can correct the matching before importing.</div></div></div></div></div>
+<div class="scrim" onclick="closeDr()"></div><aside class="drawer" id="dr"><div class="dh"><h2>Record details</h2><button class="x" onclick="closeDr()" aria-label="Close">&times;</button></div><div id="drb"></div></aside>
+<div id="set" class="ov"><div class="card dlg" style="max-width:1040px"><div class="dh"><h2>Settings</h2><button class="x" onclick="closeSet()" aria-label="Close">&times;</button></div><div class="tabs" id="stabs"></div><div id="sbody" style="margin-top:14px"></div></div></div>
+<div id="login" class="ov fp" style="display:block;z-index:50;background:var(--bg);backdrop-filter:none">
+<div class="fpbg"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="fpw">
+<section class="fpl">
+<p class="inst">G.L. Bajaj Institute of Technology &amp; Management</p>
+<h1>Publication Records <span class="ul"></span></h1>
+<p class="sub">One searchable home for everything our faculty publish.</p>
+<div class="pcs">
+<div class="pc1" style="--i:0;--c:#6366f1"><div class="ic">&#128211;</div><h4>Journals</h4><p>Research papers in SCI, Scopus, UGC-CARE and other indexed journals, with ISSN, volume, issue and DOI.</p></div>
+<div class="pc1" style="--i:1;--c:#0ea5e9"><div class="ic">&#127908;</div><h4>Conferences</h4><p>Papers presented at national and international conferences, with venue, date and proceedings details.</p></div>
+<div class="pc1" style="--i:2;--c:#f59e0b"><div class="ic">&#128218;</div><h4>Books</h4><p>Authored and edited books with publisher, ISBN, edition and year of publication.</p></div>
+<div class="pc1" style="--i:4;--c:#ec4899;grid-column:1/-1"><div class="ic">&#128161;</div><h4>Patents</h4><p>Patents filed, published and granted, searchable session wise and faculty wise, with application number and status.</p></div>
+<div class="pc1" style="--i:3;--c:#10b981"><div class="ic">&#128278;</div><h4>Book Chapters</h4><p>Chapters contributed to edited volumes, linked to the parent book, editors and publisher.</p></div>
+</div>
+<div class="fpf"><span>Search by author, title or date</span><span>Filter by department and indexing</span><span>Export to Excel and CSV</span></div>
+</section>
+<section class="fpr"><div class="card dlg lc">
+<div class="lt2"><button class="on" data-v="in" onclick="lv('in')">Sign in</button><button data-v="up" onclick="lv('up')">Sign up</button><button data-v="fg" onclick="lv('fg')">Forgot password</button></div>
+<div class="lvw" id="v_in"><h2>Welcome back</h2><p class="m" style="margin:4px 0 14px">Sign in to view and manage publication records.</p>
+<label>Username</label><input id="lu" autocomplete="username"><label style="margin-top:10px">Password</label><input id="lp" type="password" autocomplete="current-password">
+<div class="bar"><button class="btn" onclick="doLogin()">Sign in</button><button class="btn link" onclick="lv('fg')">Forgot password?</button></div>
+<div class="m" style="margin-top:10px">New here? <a href="#" onclick="lv('up');return false">Create an account</a></div></div>
+<div class="lvw" id="v_up" hidden><h2>Create account</h2><p class="m" style="margin:4px 0 14px">New accounts get view-only access and become active once the admin approves them.</p>
+<label>Username</label><input id="su" autocomplete="off"><label style="margin-top:10px">Password (min 6)</label><input id="sp" type="password" autocomplete="new-password" oninput="sStr()">
+<div class="meter"><i id="sbar"></i></div><label style="margin-top:6px">Confirm password</label><input id="sp2" type="password" autocomplete="new-password">
+<div class="bar"><button class="btn" onclick="doSignup()">Sign up</button><button class="btn link" onclick="lv('in')">Back to sign in</button></div>
+<div id="rcbox" class="rcb" hidden><b>Your recovery code</b><code id="rcv"></code><span class="m">Save it now. It is shown only once and is needed if you forget your password.</span><button class="btn s sm" onclick="rcCopy()">Copy code</button></div></div>
+<div class="lvw" id="v_fg" hidden><h2>Reset password</h2><p class="m" style="margin:4px 0 14px">Enter your username, the recovery code you got at sign up, and a new password. No code? Ask the admin to reset it.</p>
+<label>Username</label><input id="fu" autocomplete="username"><label style="margin-top:10px">Recovery code</label><input id="fc" autocomplete="off" placeholder="XXXX-XXXX-XXXX"><label style="margin-top:10px">New password (min 6)</label><input id="fp" type="password" autocomplete="new-password">
+<div class="bar"><button class="btn" onclick="doReset()">Reset password</button><button class="btn link" onclick="lv('in')">Back to sign in</button></div></div>
+<div class="m" id="lerr" style="color:var(--dg);margin-top:10px;min-height:18px"></div>
+</div></section></div></div>
+<div id="fcm" class="ov"><div class="card dlg" style="max-width:640px"><div class="dh"><h2>Faculty with no publications</h2><button class="x" onclick="closeFc()" aria-label="Close">&times;</button></div>
+<p class="m" style="margin:0 0 10px">Upload your department's faculty list (.xlsx, .xls or .csv). Names are taken from the column headed Name or Faculty, otherwise from the first column. An optional Department column is shown too.</p>
+<label>Faculty list</label><input id="fcf" type="file" accept=".xlsx,.xls,.csv"><label style="margin-top:10px">Period</label>
+<select id="fcp"><option value="all">All time</option><option value="0">CAY</option><option value="1">CAY-1</option><option value="2">CAY-2</option><option value="3">CAY-3</option></select>
+<div class="bar"><button class="btn" onclick="runFc()">Find faculty with no publications</button></div><div id="fcr"></div></div></div>
+<div id="msg"></div>
+
+<script>
+// ===== PASTE YOUR SUPABASE DETAILS HERE (between the quotes) =====
+const SB_URL = 'https://nwrmufvmdmysostkcoct.supabase.co';   // e.g. 'https://abcdxyz.supabase.co'
+const SB_KEY = 'sb_publishable_ADuLIhf6XiIPD6jjkPROmA_-d_xHHqw';   // e.g. 'sb_publishable_...'
+// =================================================================
+const T={
+ journals:{label:'Journals',yk:'pub_date',f:[['deptt','Deptt'],['author_name','Author Name'],['glb_auth_name','GLB Auth Name'],['all_author','All Author'],['pub_date','Date of Publication'],['title','Title'],['venue','Name of Journal/Conference/Book'],['indexing','Indexing'],['link','Link']]},
+ conferences:{label:'Conferences',yk:'pub_year',f:[['deptt','Deptt'],['author_name','Author Name'],['glb_auth_name','GLB Auth Name'],['all_author','All Other Author'],['pub_year','Year of Publications'],['pub_type','Journal/Conf/Book/Book Chapter'],['title','Title'],['link','Link'],['doi','DOI'],['publisher','Publisher'],['indexing','Indexing']]},
+ patents:{label:'Patents',yk:'filing_date',f:[['session','Session'],['deptt','Deptt'],['author_name','Faculty Name'],['all_author','Co-Inventors'],['title','Title of Patent'],['app_no','Application No.'],['filing_date','Date of Filing'],['published_date','Published Date'],['granted_date','Granted Date'],['status','Status'],['country','Country'],['link','Link']]},
+ books:{label:'Books & Book Chapters',yk:'pub_year',f:[['deptt','Deptt'],['author_name','Author Name'],['all_author','Co Author'],['pub_year','Year of Publications'],['pub_type','Journal/Conf/Book/Book Chapter'],['title','Title'],['link','Link'],['publisher','Publisher'],['indexing','Indexing']]}
+};
+const ALIAS={coauthor:'all_author',allauthor:'all_author',allotherauthor:'all_author',yearofpublication:'pub_year',yearofpublications:'pub_year',dateofpublication:'pub_date',nameofjournalconferencebook:'venue',journalconfbookbookchapter:'pub_type'};
+const norm=s=>String(s).toLowerCase().replace(/[^a-z0-9]/g,'');
+const $=id=>document.getElementById(id);
+let tab='journals',sb=null,D={journals:[],conferences:[],books:[],patents:[]},R={};
+
+function msg(t){const m=$('msg');m.textContent=t;m.style.display='block';clearTimeout(m._t);m._t=setTimeout(()=>m.style.display='none',4500)}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function yearOf(r,t=tab){const m=String(r[T[t].yk]||'').match(/(19|20)\d\d/);return m?+m[0]:null}
+
+function tabs(){$('tabs').innerHTML=Object.keys(T).map(k=>`<button class="${k==tab?'on':''}" onclick="setTab('${k}')">${T[k].label}</button>`).join('');rtabs()}
+function setTab(k){tab=k;tabs();automap()}
+const VIEWS={journal:['journals'],conf:['conferences'],book:['books','chapters'],patent:['patents'],all:['journals','conferences','books','chapters'],dup:[]};
+const VL={journal:'Journal',conf:'Conference',book:'Book & Book Chapter',patent:'Patents',all:'All',dup:'Find Duplicates'};let view='all';
+let CNT={},PREV={},anim=true,FIRST=true;setTimeout(()=>FIRST=false,1500);const SK='<div class="card"><div class="sk" style="width:30%"></div>'+'<div class="sk"></div>'.repeat(5)+'</div>';
+function countUp(el,k,to){const from=PREV[k]||0;PREV[k]=to;if(from===to){el.textContent=to;return}const t0=performance.now();(function f(t){const p=Math.min(1,(t-t0)/450);el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f)})(t0)}
+function rtabs(){$('rtabs').classList.toggle('first',FIRST);$('rtabs').innerHTML=Object.keys(VL).filter(k=>k!='dup'||can('dups')).map((k,i)=>`<button style="--i:${i}" class="st${k==view?' on':''}" data-k="${k}" onclick="setView('${k}')"><b>${k=='dup'?'Check':''}</b><span>${VL[k]}</span></button>`).join('');
+ $('rtabs').querySelectorAll('.st').forEach(e=>{if(e.dataset.k!='dup')countUp(e.firstChild,e.dataset.k,CNT[e.dataset.k]||0)})}
+function setView(v){view=v;XF.st=null;anim=true;if(v=='patent'&&$('more').hidden)toggleMore();rtabs();search()}
+const TYPES={conferences:['Conference','Journal','Book','Book Chapter'],books:['Book','Book Chapter']};let ft='journals';
+let eid=null;const SEL={patents:{status:['Filed','Published','Under Examination','Granted','Rejected']}},PH={session:'e.g. 2024-25 (or leave empty)',filing_date:'DD/MM/YYYY e.g. 15/07/2024',published_date:'DD/MM/YYYY',granted_date:'DD/MM/YYYY',app_no:'Application number'};
+function openForm(t,rec,pt){ft=t;eid=rec?rec.id:null;const bt=t=='books'?(rec?(/chapter/i.test(rec.pub_type||'')?'Book Chapter':'Book'):(pt||'Book')):'';$('mt').textContent=(rec?'Edit ':'Add ')+(t=='books'?bt:T[t].label.replace(/s$/,''));
+ $('form').innerHTML='<div><label>S.No</label><input value="(auto)" disabled></div>'+T[t].f.map(([k,l])=>k=='pub_type'?
+  `<div><label>${l}</label><select id="f_${k}">${TYPES[t].map(o=>`<option>${o}</option>`).join('')}</select></div>`:
+  SEL[t]&&SEL[t][k]?`<div><label>${l}</label><select id="f_${k}"><option value="">Select</option>${SEL[t][k].map(o=>`<option>${o}</option>`).join('')}</select></div>`:
+  `<div><label>${l}</label><input id="f_${k}"${PH[k]&&t=='patents'?` placeholder="${PH[k]}"`:''}></div>`).join('');
+ if(rec)T[t].f.forEach(([k])=>{const el=$('f_'+k),v=rec[k]??'';if(el.tagName=='SELECT'&&v&&![...el.options].some(o=>o.value==v))el.add(new Option(v,v));el.value=v});
+ if(!rec&&t=='books'&&pt&&$('f_pub_type'))$('f_pub_type').value=pt;
+ if(t=='books'&&$('f_title'))$('f_title').previousElementSibling.textContent=bt=='Book Chapter'?'Chapter Title':'Book Title';
+ $('modal').style.display='block'}
+function closeForm(){$('modal').style.display='none'}
+
+function mk(u,k){u=(u||'').trim().replace(/\/+$/,'').replace(/\/rest\/v1$/,'');k=(k||'').trim();
+ return(/^https:\/\/[^\s]+$/.test(u)&&k)?{u,k}:null}
+function hd(extra){const h={apikey:sb.k,'Content-Type':'application/json',...extra};if(sb.k.startsWith('eyJ'))h.Authorization='Bearer '+sb.k;return h}
+async function chk(r){if(r.ok)return;let m=r.status+' '+r.statusText;try{const j=await r.json();m=j.message||j.hint||m}catch(e){}
+ if(r.status==404||/relation|schema cache/i.test(m))m+=' (run supabase_setup.sql first)';
+ if(r.status==401||r.status==403)m+=' (check the key and the policies in supabase_setup.sql)';throw new Error(m)}
+async function ins(t,rows){let r;try{r=await fetch(sb.u+'/rest/v1/'+t,{method:'POST',headers:hd({Prefer:'return=minimal'}),body:JSON.stringify(rows)})}
+ catch(e){throw new Error('Cannot reach Supabase. Check the Project URL and internet.')}await chk(r)}
+function connect(){sb=mk($('url').value,$('key').value);if(!sb)return msg('Enter the Project URL (https://xxxx.supabase.co) and the key');
+ try{localStorage.setItem('sbcfg',JSON.stringify({u:sb.u,k:sb.k}))}catch(e){}refresh()}
+async function load(t){let all=[],from=0;for(;;){let r;
+ try{r=await fetch(`${sb.u}/rest/v1/${t}?select=*&order=id.asc&limit=1000&offset=${from}`,{headers:hd()})}
+ catch(e){throw new Error('Cannot reach Supabase. Check the Project URL and internet.')}
+ await chk(r);const data=await r.json();all=all.concat(data);if(data.length<1000)break;from+=1000}D[t]=all}
+let PW='';
+async function loadAll(){PW='';for(const t in T){try{await load(t)}catch(e){if(t!='patents')throw e;D.patents=[];PW='Patents table not found. Run supabase_patents.sql in Supabase, then reload.'}}}
+async function refresh(){if(!sb)return msg('Connect to Supabase first');
+ anim=true;$('res').innerHTML=SK;try{await loadAll();msg(PW||'Connected. Records loaded.');search()}catch(e){msg('Error: '+e.message)}}
+
+const SEC=[
+ {id:'journals',label:'Journals',src:'journals',ok:r=>true},
+ {id:'conferences',label:'Conferences',src:'conferences',ok:r=>true},
+ {id:'books',label:'Books',src:'books',ok:r=>!/chapter/i.test(r.pub_type||'')},
+ {id:'chapters',label:'Book Chapters',src:'books',ok:r=>/chapter/i.test(r.pub_type||'')},
+ {id:'patents',label:'Patents',src:'patents',ok:r=>true}];
+function monthOf(v){v=String(v??'').trim();if(!v)return 0;
+ for(const x of v.toLowerCase().match(/[a-z]{3,}/g)||[]){if(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)(uary|ruary|ch|il|e|y|ust|t|tember|ober|ember)?$/.test(x))return['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(x.slice(0,3))+1}
+ let m=v.match(/(?:19|20)\d\d[-\/.](\d{1,2})(?!\d)/);if(m&&+m[1]>=1&&+m[1]<=12)return+m[1];
+ m=v.match(/^(\d{1,2})[-\/.](?:19|20)\d\d$/);if(m&&+m[1]>=1&&+m[1]<=12)return+m[1];
+ m=v.match(/(\d{1,2})[-\/.](\d{1,2})[-\/.]\d{2,4}/);if(m){const a=+m[1],b=+m[2];if(b>=1&&b<=12)return b;if(a>=1&&a<=12)return a}return 0}
+function dateRange(v){v=String(v??'').trim();if(!v)return null;
+ const ym=v.match(/(?:19|20)\d\d/);if(!ym)return null;const y=+ym[0];let mo=0,d=0,m;
+ if(m=v.match(/^((?:19|20)\d\d)[-\/.](\d{1,2})[-\/.](\d{1,2})(?!\d)/)){mo=+m[2];d=+m[3];if(mo>12&&d<=12){const t=mo;mo=d;d=t}}
+ else if(m=v.match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](?:19|20)\d\d/)){d=+m[1];mo=+m[2];if(mo>12&&d<=12){const t=mo;mo=d;d=t}}
+ else{mo=monthOf(v);if(mo&&/[a-z]{3}/i.test(v)){const dm=v.replace(ym[0],' ').match(/(?:^|[^\d])(\d{1,2})(?:st|nd|rd|th)?(?!\d)/);if(dm&&+dm[1]>=1&&+dm[1]<=31)d=+dm[1]}}
+ if(mo<1||mo>12){mo=0;d=0}
+ if(d<1||d>31)d=0;
+ if(d&&mo)return[Date.UTC(y,mo-1,d),Date.UTC(y,mo-1,d)];
+ if(mo)return[Date.UTC(y,mo-1,1),Date.UTC(y,mo,0)];
+ return[Date.UTC(y,0,1),Date.UTC(y,11,31)]}
+function normSes(v){const m=String(v||'').match(/((?:19|20)\d\d)\s*[-–—\/]\s*((?:19|20)?\d\d)/);return m?m[1]+'-'+m[2].slice(-2):''}
+function sesDerive(v){const g=dateRange(v);if(!g||g[1]-g[0]>32*864e5)return'';const d=new Date(g[0]),y=d.getUTCFullYear(),a=d.getUTCMonth()>=6?y:y-1;return a+'-'+String(a+1).slice(-2)}
+function sesOf(r){return normSes(r.session)||sesDerive(r.pub_date??r.pub_year??r.filing_date)||String(r.session||'').trim()}
+let LK='';
+function fillLists(){const k=Object.values(D).map(a=>a.length).join();if(k==LK)return;LK=k;const ss=new Set(),fc=new Map();
+ for(const t in D)D[t].forEach(r=>{const x=sesOf(r);if(/^\d{4}-\d\d$/.test(x))ss.add(x);authList(r).forEach((n,key)=>{if(!fc.has(key))fc.set(key,n)})});
+ const el=$('q_ses'),cur=el.value;el.innerHTML='<option value="">Any session</option>'+[...ss].sort().reverse().map(x=>`<option>${x}</option>`).join('');el.value=cur;
+ $('facl').innerHTML=[...fc.values()].sort((a,b)=>a.localeCompare(b)).slice(0,3000).map(n=>`<option value="${esc(n)}">`).join('')}
+function dvals(r){if('filing_date' in r){const k=$('q_dtype').value;return(k?[r[k]]:[r.filing_date,r.published_date,r.granted_date]).filter(x=>String(x||'').trim())}return[r.pub_date??r.pub_year]}
+function match(r){const g=id=>$(id).value.trim().toLowerCase(),n=g('q_name'),df=$('q_from').value?Date.parse($('q_from').value):-Infinity,dt=$('q_to').value?Date.parse($('q_to').value):Infinity,
+ ti=g('q_title'),de=g('q_dept'),ix=g('q_idx'),mo=+$('q_month').value;
+ if(n&&![r.author_name,r.glb_auth_name,r.all_author].join(' ').toLowerCase().includes(n))return false;
+ const pt='filing_date' in r,ds=dvals(r);
+ if(df>-Infinity||dt<Infinity){const ok=ds.some(v=>{const g=dateRange(v);return g&&g[1]>=df&&g[0]<=dt})||(!pt&&r.year&&!ds.some(v=>dateRange(v))&&Date.UTC(r.year,11,31)>=df&&Date.UTC(r.year,0,1)<=dt);if(!ok)return false}
+ if(mo&&!ds.some(v=>monthOf(v)===mo))return false;
+ if(ti&&!(r.title||'').toLowerCase().includes(ti))return false;
+ if($('q_ses').value&&sesOf(r)!=$('q_ses').value)return false;if(XF.st&&String(r.status||'').trim().toLowerCase()!=XF.st)return false;
+ if(de&&!(r.deptt||'').toLowerCase().includes(de))return false;
+ if(ix&&!(r.indexing||'').toLowerCase().includes(ix))return false;if(XF.idx&&idxKey(r.indexing)!=XF.idx)return false;
+ if(XF.mon&&!ds.some(v=>{const g=dateRange(v);if(!g||g[1]-g[0]>32*864e5)return false;const d=new Date(g[0]);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')==XF.mon}))return false;
+ if(XF.au&&!authKeys(r).includes(XF.au))return false;return true}
+function authList(r){const m=new Map();[r.glb_auth_name,r.author_name].forEach(v=>String(v||'').split(/[,;&\n]|\band\b/i).forEach(n=>{n=n.trim().replace(/^(dr|mr|ms|mrs|prof)\.?\s+/i,'');const k=n.toLowerCase().replace(/\./g,'').replace(/\s+/g,' ').trim();if(k.length>=3&&!m.has(k))m.set(k,n)}));return m}
+function authKeys(r){return[...authList(r).keys()]}
+const SORT={};function sortBy(id,k){anim=true;const c=SORT[id];SORT[id]=c&&c.k==k?{k,d:-c.d}:{k,d:1};search()}
+function sv(r,k){const v=r[k]??'';if(k=='pub_date'||k=='pub_year'||/^(filing|published|granted)_date$/.test(k)){const g=dateRange(v);return g?g[0]:-1}return String(v).toLowerCase()}
+function badge(v){v=String(v||'').trim();if(!v)return'';const l=v.toLowerCase();const h=/esci/.test(l)?35:/scopus/.test(l)?165:/sci/.test(l)?265:/wos|web of/.test(l)?200:/ugc/.test(l)?300:/not/.test(l)?0:215;return `<span class="bdg" style="--h:${h}">${esc(v)}</span>`}
+function search(){if(!can('view')){$('dash').innerHTML='';$('res').innerHTML='<div class="card empty">'+(ME?'Your account does not have permission to view records.':'')+'</div>';return}fillLists();let tot=0;
+ SEC.forEach(S=>{const all=D[S.src].filter(S.ok);R[S.id]=all.filter(match);S.n=all.length;tot+=R[S.id].length});
+ CNT={};for(const v in VIEWS)CNT[v]=VIEWS[v].reduce((n,id)=>n+R[id].length,0);rtabs();
+ const go=anim;$('res').className=go?'anim':'';anim=false;
+ $('res').innerHTML=SEC.map(S=>{if(!VIEWS[view].includes(S.id))return '';const f=T[S.src].f,so=SORT[S.id],rows=R[S.id].slice();
+  if(so)rows.sort((a,b)=>{const x=sv(a,so.k),y=sv(b,so.k);return(x>y?1:x<y?-1:0)*so.d});
+  return `<section class="card"><div class="ch"><h2>${S.label}<span class="m">${rows.length} of ${S.n}</span></h2><div class="dls">${can('export')?`<button class="btn s sm" onclick="dl('${S.id}','xlsx')">Excel</button><button class="btn s sm" onclick="dl('${S.id}','csv')">CSV</button>`:''}</div></div>`+
+  (rows.length?`<div class="w"><table><thead><tr><th>S.No</th>${f.map(([k,l])=>`<th class="so" onclick="sortBy('${S.id}','${k}')">${l}<i>${so&&so.k==k?(so.d>0?'▲':'▼'):''}</i></th>`).join('')}<th></th></tr></thead><tbody>`+
+  rows.map((r,i)=>`<tr class="rw" style="--i:${Math.min(i,14)}" onclick="openRec('${S.src}',${r.id})"><td>${i+1}</td>`+f.map(([k])=>{const v=r[k];return k=='link'?`<td>${v?`<a href="${esc(v)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Open</a>`:''}</td>`:k=='indexing'?`<td>${badge(v)}</td>`:k=='title'?`<td class="t" title="${esc(v)}"><div>${esc(v)}</div></td>`:`<td title="${esc(v)}">${esc(v)}</td>`}).join('')+`<td class="act">${act(S.src,r.id)}</td></tr>`).join('')+
+  '</tbody></table></div>':`<div class="empty">${S.n?'No records match your search.':'No records yet. Import an Excel file or add one.'}</div>`)+'</section>'}).join('');
+ $('total').textContent=`${tot} record${tot==1?'':'s'} found`;if(view=='dup')dups();dash(go)}
+function clearQ(){HIST.length=0;bkb();XF.idx=XF.mon=XF.au=XF.auN=XF.st=null;['q_name','q_from','q_to','q_month','q_title','q_dept','q_idx','q_ses','q_dtype'].forEach(i=>$(i).value='');search()}
+
+function build(obj,t=tab){const row={};T[t].f.forEach(([k])=>row[k]=(obj[k]??'').toString().trim());row.year=yearOf(row,t);if(t=='patents')row.session=normSes(row.session)||sesDerive(row.filing_date)||row.session;return row}
+async function addOne(){if(!sb)return msg('Supabase is not set');const o={};T[ft].f.forEach(([k])=>o[k]=$('f_'+k).value);
+ if(!o.title.trim())return msg('Title is required');
+ try{if(eid){
+   if(!confirm('Save changes to this record?'))return;
+   if(!confirm('Final confirmation: the old data will be overwritten. Continue?'))return;
+   await mod(ft,eid,'PATCH',build(o,ft));msg('Record updated')}
+  else{await ins(ft,[build(o,ft)]);msg('Saved')}}catch(e){return msg('Error: '+e.message)}
+ closeForm();await load(ft);search()}
+function act(t,id){return (can('edit')?`<button class="btn s sm" onclick="event.stopPropagation();closeDr();editRec('${t}',${id})">Edit</button> `:'')+(can('delete')?`<button class="btn s sm danger" onclick="event.stopPropagation();closeDr();delRec('${t}',${id})">Delete</button>`:'')}
+async function mod(t,id,method,body){let r;try{r=await fetch(`${sb.u}/rest/v1/${t}?id=eq.${id}`,{method,headers:hd({Prefer:'return=representation'}),body:body?JSON.stringify(body):undefined})}
+ catch(e){throw new Error('Cannot reach Supabase.')}await chk(r);const d=await r.json();
+ if(!d.length)throw new Error('Not allowed or record not found. Run supabase_edit_delete.sql in Supabase SQL Editor.')}
+function editRec(t,id){const r=D[t].find(x=>x.id==id);if(r)openForm(t,r)}
+async function delRec(t,id){const r=D[t].find(x=>x.id==id);if(!r)return;
+ if(!confirm('Delete this record?\n\n'+(r.title||'')+'\n'+(r.author_name||'')))return;
+ if(prompt('Second verification: type DELETE (capital letters) to permanently delete this record.')!=='DELETE')return msg('Delete cancelled');
+ try{await mod(t,id,'DELETE');msg('Record deleted');await load(t);search()}catch(e){msg('Error: '+e.message)}}
+function dups(){const m={},lab={journals:()=>'Journal',conferences:()=>'Conference',books:r=>/chapter/i.test(r.pub_type||'')?'Book Chapter':'Book'};
+ for(const t in D){if(t=='patents')continue;D[t].forEach(r=>{const k=norm(r.title||'');if(k)(m[k]=m[k]||[]).push({t,r,l:lab[t](r)})})}
+ const g=Object.values(m).filter(a=>a.length>1).sort((a,b)=>b.length-a.length);
+ $('total').textContent=`${g.length} duplicate group(s), ${g.reduce((n,a)=>n+a.length,0)} records (same title, checked across Journals, Conferences, Books)`;
+ $('res').innerHTML=g.length?g.map((a,i)=>`<div class="card"><h2>Group ${i+1}: ${esc(a[0].r.title)} <span class="m">(${a.length} records)</span></h2><div class="w"><table><thead><tr><th>Type</th><th>Deptt</th><th>Author Name</th><th>GLB Auth Name</th><th>Year</th><th>Indexing</th><th>Link</th><th></th></tr></thead><tbody>`+
+  a.map(x=>`<tr><td>${x.l}</td><td>${esc(x.r.deptt)}</td><td>${esc(x.r.author_name)}</td><td>${esc(x.r.glb_auth_name)}</td><td>${x.r.year||''}</td><td>${esc(x.r.indexing)}</td><td>${x.r.link?`<a href="${esc(x.r.link)}" target="_blank" rel="noopener">link</a>`:''}</td><td class="act">${act(x.t,x.r.id)}</td></tr>`).join('')+'</tbody></table></div></div>').join(''):'<div class="card empty">No duplicates found.</div>'}
+
+const SYN={
+ deptt:['deptt','dept','department','departmentname','school','faculty','branch','discipline','dep','schooldepartment'],
+ author_name:['authorname','author','name','facultyname','facultymember','teachername','firstauthor','mainauthor','principalauthor','nameoffaculty','nameofauthor','faculty'],
+ glb_auth_name:['glbauthname','glbauthor','glbauthorname','glbfaculty','glbfacultyname','universityauthor','institutionauthor','internalauthor','glb'],
+ all_author:['allauthor','allauthors','authors','coauthor','coauthors','allotherauthor','allotherauthors','otherauthors','authorlist','listofauthors','contributors','authorsname'],
+ pub_date:['dateofpublication','publicationdate','publisheddate','pubdate','date','monthyear','yearofpublication','yearofpublications','publicationyear','pubyear','year'],
+ pub_year:['yearofpublications','yearofpublication','publicationyear','pubyear','year','dateofpublication','publicationdate','publisheddate','date'],
+ pub_type:['journalconfbookbookchapter','type','publicationtype','typeofpublication','category','documenttype','doctype','publicationcategory'],
+ title:['title','papertitle','titleofpaper','titleofthepaper','articletitle','publicationtitle','booktitle','chaptertitle','titleofbook','titleofchapter','titleofthebook','titleofarticle','nameofpaper','researchpaper','paper'],
+ venue:['nameofjournalconferencebook','journal','journalname','nameofjournal','source','sourcetitle','publication','publicationname','conference','conferencename','nameofconference','bookname','publishedin','venue','nameofthejournal'],
+ indexing:['indexing','indexed','indexedin','indexation','indexingstatus','scopus','wos','database','scopuswos','scopusscie','indexingdatabase'],
+ link:['link','url','weblink','articlelink','paperlink','hyperlink','website','weburl','links'],
+ doi:['doi','doinumber','doilink','doino','doiurl'],
+ publisher:['publisher','publishername','publishedby','publishinghouse','publication house','nameofpublisher']};
+Object.assign(SYN,{published_date:['publisheddate','patentpublisheddate','publicationdate','dateofpublication','publishdate','datepublished','dateofpublishing','publishedon'],granted_date:['granteddate','dateofgrant','grantdate','dategranted','grantedon','patentgranteddate','dateofgranting'],session:['session','academicsession','academicyear','sessionyear','ay','year'],app_no:['applicationno','applicationnumber','patentno','patentnumber','appno','applicationid','patentapplicationno','patentapplicationnumber','ipindiaapplicationno','applicationnoofpatent'],
+ filing_date:['dateoffiling','filingdate','dateoffilling','filleddate','dateofapplication','applicationdate','yearoffiling','filingyear','date'],status:['status','patentstatus','statusofpatent','currentstatus','stage'],country:['country','jurisdiction','patentoffice','nationalinternational','nationality']});
+['inventor','inventorname','nameofinventor','leadinventor','applicant','nameofapplicant','facultyinventor'].forEach(x=>SYN.author_name.push(x));
+['titleofpatent','patenttitle','titleoftheinvention','inventiontitle','titleofinvention','titleofthepatent','nameofpatent','nameoftheinvention'].forEach(x=>SYN.title.push(x));
+['coinventors','coinventor','inventors','otherinventors','nameofcoinventors','nameofinventors'].forEach(x=>SYN.all_author.push(x));
+const TPL={journals:'UEsDBBQAAAAIAMsgZ11Gx01IlQAAAM0AAAAQAAAAZG9jUHJvcHMvYXBwLnhtbE3PTQvCMAwG4L9SdreZih6kDkQ9ip68zy51hbYpbYT67+0EP255ecgboi6JIia2mEXxLuRtMzLHDUDWI/o+y8qhiqHke64x3YGMsRoPpB8eA8OibdeAhTEMOMzit7Dp1C5GZ3XPlkJ3sjpRJsPiWDQ6sScfq9wcChDneiU+ixNLOZcrBf+LU8sVU57mym/8ZAW/B7oXUEsDBBQAAAAIAMsgZ13Qd+Ue7wAAACsCAAARAAAAZG9jUHJvcHMvY29yZS54bWzNks9qwzAMh19l+J7ISUcGJvWlZacNBits7GZstTWN/2BrJH37JVmbMrYH2NHSz58+gVodhQ4JX1KImMhivhtc57PQcc2ORFEAZH1Ep3I5JvzY3IfkFI3PdICo9EkdEGrOG3BIyihSMAGLuBCZbI0WOqGikC54oxd8/EzdDDMasEOHnjJUZQVMThPjeehauAEmGGFy+buAZiHO1T+xcwfYJTlku6T6vi/71Zwbd6jg/fnpdV63sD6T8hrHX9kKOkdcs+vkt9Vmu3tksuZ1U1RVwR92/F7wRtT1x+T6w+8m7IKxe/uPja+CsoVfdyG/AFBLAwQUAAAACADLIGddmVycIxAGAACcJwAAEwAAAHhsL3RoZW1lL3RoZW1lMS54bWztWltz2jgUfu+v0Hhn9m0LxjaBtrQTc2l227SZhO1OH4URWI1seWSRhH+/RzYQy5YN7ZJNups8BCzp+85FR+foOHnz7i5i6IaIlPJ4YNkv29a7ty/e4FcyJBFBMBmnr/DACqVMXrVaaQDDOH3JExLD3IKLCEt4FMvWXOBbGi8j1uq0291WhGlsoRhHZGB9XixoQNBUUVpvXyC05R8z+BXLVI1lowETV0EmuYi08vlsxfza3j5lz+k6HTKBbjAbWCB/zm+n5E5aiOFUwsTAamc/VmvH0dJIgILJfZQFukn2o9MVCDINOzqdWM52fPbE7Z+Mytp0NG0a4OPxeDi2y9KLcBwE4FG7nsKd9Gy/pEEJtKNp0GTY9tqukaaqjVNP0/d93+ubaJwKjVtP02t33dOOicat0HgNvvFPh8Ouicar0HTraSYn/a5rpOkWaEJG4+t6EhW15UDTIABYcHbWzNIDll4p+nWUGtkdu91BXPBY7jmJEf7GxQTWadIZljRGcp2QBQ4AN8TRTFB8r0G2iuDCktJckNbPKbVQGgiayIH1R4Ihxdyv/fWXu8mkM3qdfTrOa5R/aasBp+27m8+T/HPo5J+nk9dNQs5wvCwJ8fsjW2GHJ247E3I6HGdCfM/29pGlJTLP7/kK6048Zx9WlrBdz8/knoxyI7vd9lh99k9HbiPXqcCzIteURiRFn8gtuuQROLVJDTITPwidhphqUBwCpAkxlqGG+LTGrBHgE323vgjI342I96tvmj1XoVhJ2oT4EEYa4pxz5nPRbPsHpUbR9lW83KOXWBUBlxjfNKo1LMXWeJXA8a2cPB0TEs2UCwZBhpckJhKpOX5NSBP+K6Xa/pzTQPCULyT6SpGPabMjp3QmzegzGsFGrxt1h2jSPHr+BfmcNQockRsdAmcbs0YhhGm78B6vJI6arcIRK0I+Yhk2GnK1FoG2camEYFoSxtF4TtK0EfxZrDWTPmDI7M2Rdc7WkQ4Rkl43Qj5izouQEb8ehjhKmu2icVgE/Z5ew0nB6ILLZv24fobVM2wsjvdH1BdK5A8mpz/pMjQHo5pZCb2EVmqfqoc0PqgeMgoF8bkePuV6eAo3lsa8UK6CewH/0do3wqv4gsA5fy59z6XvufQ9odK3NyN9Z8HTi1veRm5bxPuuMdrXNC4oY1dyzcjHVK+TKdg5n8Ds/Wg+nvHt+tkkhK+aWS0jFpBLgbNBJLj8i8rwKsQJ6GRbJQnLVNNlN4oSnkIbbulT9UqV1+WvuSi4PFvk6a+hdD4sz/k8X+e0zQszQ7dyS+q2lL61JjhK9LHMcE4eyww7ZzySHbZ3oB01+/ZdduQjpTBTl0O4GkK+A226ndw6OJ6YkbkK01KQb8P56cV4GuI52QS5fZhXbefY0dH758FRsKPvPJYdx4jyoiHuoYaYz8NDh3l7X5hnlcZQNBRtbKwkLEa3YLjX8SwU4GRgLaAHg69RAvJSVWAxW8YDK5CifEyMRehw55dcX+PRkuPbpmW1bq8pdxltIlI5wmmYE2eryt5lscFVHc9VW/Kwvmo9tBVOz/5ZrcifDBFOFgsSSGOUF6ZKovMZU77nK0nEVTi/RTO2EpcYvOPmx3FOU7gSdrYPAjK5uzmpemUxZ6by3y0MCSxbiFkS4k1d7dXnm5yueiJ2+pd3wWDy/XDJRw/lO+df9F1Drn723eP6bpM7SEycecURAXRFAiOVHAYWFzLkUO6SkAYTAc2UyUTwAoJkphyAmPoLvfIMuSkVzq0+OX9FLIOGTl7SJRIUirAMBSEXcuPv75Nqd4zX+iyBbYRUMmTVF8pDicE9M3JD2FQl867aJguF2+JUzbsaviZgS8N6bp0tJ//bXtQ9tBc9RvOjmeAes4dzm3q4wkWs/1jWHvky3zlw2zreA17mEyxDpH7BfYqKgBGrYr66r0/5JZw7tHvxgSCb/NbbpPbd4Ax81KtapWQrET9LB3wfkgZjjFv0NF+PFGKtprGtxtoxDHmAWPMMoWY434dFmhoz1YusOY0Kb0HVQOU/29QNaPYNNByRBV4xmbY2o+ROCjzc/u8NsMLEjuHti78BUEsDBBQAAAAIAMsgZ11BTAIu5gIAAM8HAAAYAAAAeGwvd29ya3NoZWV0cy9zaGVldDEueG1sjZVbU+owEID/SibPHMtFRJ3SGbmoOOph5KjPod1ChjTpSVKr59efTVoYRUAegGaz397Y7oal0iuzBLDkPRPS9OnS2vwyCEy8hIyZE5WDxJtU6YxZPOpFYHINLPFQJoJ2s3kWZIxLGoVeNtVRqAoruISpJqbIMqY/BiBU2actuhY88cXSOkEQhTlbwAzscz7VeAo2VhKegTRcSaIh7dOr1uWd1/cKLxxK8+mZuEzmSq3cYZL0aZM6yxLIxywX3PsiVuX3kNohCIH22pSw2PI3mKJan86VtSpz9xilZRZFqVb/QHqfIAB1MZb8m3JlpDbqUvxbx0s36bigPj+vI7/2dcU6zZmBoRKvPLHLPj2nJIGUFcI+qfIW6lp1nb1YCeO/SVnptk4piQuD0dQwRpBxWf2y97rGxwDtGmhvA909QKcGOttAbw9wWgOnW0DnfA/QrYHuFtDu7AHOauDsWA+9GuhtA/uSPq+B82PLelEDF8cCreb6n2v6Dqr+ct8vI2ZZFGpVEu31XV902ms7m07B1o+dhu/GqvP7lEv3Ts6sxluOBm00O3lUYWDRhTsHcU0NDlMjyK3dgQ0PY1eFXSpNHlkGO+DRYfjmfkCcgX34+AffQpDK/w72+od0cRIQlZJpMRc8Zm4G7DByc9jIH27FrrhvD2MuW+f7ThVaMhEMlUxBg4whGOCo22FwctjgRCbwzuViB3l3mLzncstfgG24nmlVXyb4/cIET3yVDIlVIet2/Hq1HpGT9uUEFwj2u1mqcqRVPlKldLPbCyYyL+wDGIMLYiMca630ZyETuFsGgsmVjx7cfZ9OebwijLwxUQDBOZ4RuwQiuMGBbT9yRP1zFLrVVgjWiugsVnlhGrPhJMDPuPGqZo3nm+Gv4dXTuDFGUeM32tCNR2WJLyQkNAw2fBh8TfKbwFSr7oHpBcfqCFwemMBJDyeNrl7c6oBbymdS7ZjqPceNC9op4H2qlF0f3HzY7PDoP1BLAwQUAAAACADLIGddUVYFYPcDAADQCwAAGAAAAHhsL3dvcmtzaGVldHMvc2hlZXQyLnhtbK2W3W/jNgzA/xXCTy2Qi+189ePSAE3bbd3uDkV7t2GPis3EQmXLJ8lN89+PlBM7w1I97SGxZInkTxRJc77V5tUWiA7eS1XZm6hwrr6OY5sVWAo71DVWtLLWphSOpmYT29qgyL1QqeJRksziUsgqWsz9uyezmOvGKVnhkwHblKUwuyUqvb2J0ujw4lluCscv4sW8Fht8QfejfjI0izstuSyxslJXYHB9E92m18v0igX8jj8lbu3RGPgoK61fefKY30QJE6HCzLEKQY83vEOlWBNx/NwrjTqbLHg8Pmj/xR+eDrMSFu+0+kvmrriJLiPIcS0a5Z719jfcH2jK+jKtrP+Hbbt3PIkga6zT5V6YCEpZtU/xvnfEkcAs+UBgtBcYee7WkKe8F04s5kZvwfBu0sYDf1QvRXCy4lt5cYZWJcm5xe+6MZVQFppaaZGDw7JWwuE8dqSd98QZ/Uhrp3rcqR571eMPVH/f1Qg70k+3l2mTW6BbcAVCxKQkytADsE4YJ6sNCAdsYQRn/EhBWr+7oFij5fNhAGnSIU2CSPcaKk1msBIlDuhJWGhAG7pIhQ6PDdohvAy/acbQNUeQUJ/9uqhrqJpyhcYysAXpKMrWIb5pxzcNu0w6hWzR4M9GGsyH8MwWttIVRA7Or4sq54loXEHkwiDYV1nXtDuAMOsQZkGEv1EYiCGnGLgmSztoM5+h1rQVzkbJaDKAdPQpmX5qx1/FDnh0PoTv5J8da/BnoHhaG12Sg0JkFx3ZRZDsxz5CC4/CfqoO93ENWaG1be+PaLOCA8pRAFJ8+QrQiw1oL2avfitlT1NWnQQtKUlLj2WtTZD5qmO+8syTD5gf3gXlE/rAPsvb6Mt0vTsONMqAncLPHpedptj54pAsnCttqpwHeNKkz/ckSMQx/W9FXmy5F5t6Ma7lb4t0Hr+dsnVUW9KgrXusnTtpLD0y9l+5u5eH0FlHvf1R0P5tmyHfKNlPUoyCFPdmCLdD+KOhz1UIp6+H6TiI8+uXJTDSx0Dj/wWor4bpJOwfpaD10UmaSZDmQDKAJVVKiuNiAHdUr4QOsfWVMJ2GY4cKEOg1PDUryknBBfgk5DQI2ZepEFRfG9NZEMrX55MYs/DNIdagqC5WnO9UUSEzuoZcWqSOgj4+rm1SQpB9mUwvgpAcXey5/ac9vtPVGumTl2G8pO7oJP5FEP/x4eEBbrMMrQ0RXvaEl0HCxyrHd/LESZTLIMoLVc8mSNGX5jRcm7/I6rQzroIE3B9bapBzLX03nCbDNE2uYmxL/Sm0+Kg/4173qzAbWVmKiDWZSIYXZMu07WM7cbr2Dd9KO2oA/ZA/Fmh4A62vtXaHCXeBXRO/+AdQSwMEFAAAAAgAyyBnXfv+nuIQAwAAcQ4AAA0AAAB4bC9zdHlsZXMueG1s3Vdtb9owEP4rkX/AAmSNyARIbTSkSdtUqf2wr4Y4wZITZ47TQX/9fHbeoL6OTuuXBSHsOz93z73FYtXok2APB8Z0cCxF1azJQev6Uxg2+wMrafNB1qwymlyqkmqzVUXY1IrRrAFQKcLFbBaHJeUV2ayqttyWugn2sq30msxIuFnlsholMXECc5SWLHiiYk1SKvhOcXuWllycnHgBgr0UUgXaUGFrMgdJ8+zUc7cDlp2dkldSgTB0Hi793CpOBeh3nYXRgSp2hu1sa5+3mhgYRdcg32L5T2fPyMNzRt7+NAbOhRgKEBEn2KxqqjVT1dZsLMYKX6iCbv14qk0FCkVP88UNuRrQSMEzcFmkU67z7c3njusEOhi1P4b5TqqMqYH7gvSizUqwXBu44sUBfrWsIXdSa1maRcZpIStqA+sRU2Rg235N9MG27Vke7+xjucHRzseVCHvW0rkSYE72vK9EuMOTwLqFydeeCfEARn7kQ9LmxtQxD9xkfslgKANojH5pMt0tnRm3AUdTa872xGz8V2aDmj9JfdeaCCq7/9lKze4Vy/nR7o/54B+zPh+tL6bWjZzWtTjdCl5UJXOxX+1ws6I9LnhiSvM9TNrebJkiwS9F60d21P1cHnOc3+Jdo4/e1frHd7V+g1v/R5U7SMWfjTeoHQzvUKywa9/JjJxNyCAN4DW7Jt/huhOjk2DXcqF51e0OPMtY9WJQjHlNd+Y+PbNvzmcsp63Qj4NyTcb1N5bxtkyGU/cQeHdqXH+FN8s8Hl77xhevMnZkWdptzasivbwQZpbhpWa8515qMIzT+TX9xePzgzHAMA6F+fmf4lmi8Tgdxm3p1SxRzBLFOJRPk9oP5sePSczjjzRJoiiOsYymqZdBiuUtjuHrt4ZxAwTmBzy9Ldd4tfEOeb0PsJq+1iFYpHgnYpHiuQaNP2+ASBJ/tTE/gMCqgPUO+Pf7gZ7yY6IIqopxwyYY1yQJpoFe9PdoHCPZieHjrw82JVGUJH4N6PwMogjTwDTiGowBcMA0kfvnc3Efhf09FY5/Mje/AVBLAwQUAAAACADLIGddl4q7HMAAAAATAgAACwAAAF9yZWxzLy5yZWxznZK5bsMwDEB/xdCeMAfQIYgzZfEWBPkBVqIP2BIFikWdv6/apXGQCxl5PTwS3B5pQO04pLaLqRj9EFJpWtW4AUi2JY9pzpFCrtQsHjWH0kBE22NDsFosPkAuGWa3vWQWp3OkV4hc152lPdsvT0FvgK86THFCaUhLMw7wzdJ/MvfzDDVF5UojlVsaeNPl/nbgSdGhIlgWmkXJ06IdpX8dx/aQ0+mvYyK0elvo+XFoVAqO3GMljHFitP41gskP7H4AUEsDBBQAAAAIAMsgZ11tTKjrRwEAALMCAAAPAAAAeGwvd29ya2Jvb2sueG1stZLdSsNAEIVfJewDmDRowdJ4Y1ELosVK77fJpBm6P2F20mqf3smGYEAQb7zanTPL4Zszuzx7Ou69PyYf1rhQqIa5XaRpKBuwOlz5Fpx0ak9Ws5R0SENLoKvQALA1aZ5l89RqdOpuOXptKJ0WnqFk9E7EXtghnMN3vy+TEwbco0H+LFS8G1CJRYcWL1AVKlNJaPz5yRNevGNttiV5Ywo1Gxo7IMbyh7ztId/1PkSF9f5NC0ih5pkY1kiB44vor4XxBPJ4qDr2D2gYaKUZHsl3LbpDbyNTpJMxYg7jOYS4oL/E6OsaS1j5srPgeMiRwPSALjTYBpU4baFQAqD7ccR/XQ2jsTBNgqIFSoPWVaT7P5K1C0xd3GWYEOW/EOUxrzGkCmp0UL2IWxBdFlZuKOmPOFl+fTO7lcV0xtyL9uqeva7GzMf/cvcFUEsDBBQAAAAIAMsgZ12N9yxatAAAAIkCAAAaAAAAeGwvX3JlbHMvd29ya2Jvb2sueG1sLnJlbHPFkk0KgzAQRq8ScoCO2tJFUVfduC1eIOj4g9GEzJTq7Wt1oYEuupGuwjch73swiR+oFbdmoKa1JMZeD5TIhtneAKhosFd0MhaH+aYyrlc8R1eDVUWnaoQoCK7g9gyZxnumyCeLvxBNVbUF3k3x7HHgL2B4GddRg8hS5MrVyImEUW9jguUITzNZiqxMpMvKUMK/hSJPKDpQiHjSSJvNmr3684H1PL/FrX2J69DfyeXjAN7PS99QSwMEFAAAAAgAyyBnXW6nJLweAQAAVwQAABMAAABbQ29udGVudF9UeXBlc10ueG1sxZTPTsMwDMZfpcp1ajJ24IDWXYAr7MALhNZdo+afYm90b4/bbpNAo2IqEpdGje3v5/iLsn47RsCsc9ZjIRqi+KAUlg04jTJE8BypQ3Ka+DftVNRlq3egVsvlvSqDJ/CUU68hNusnqPXeUvbc8Taa4AuRwKLIHsfEnlUIHaM1pSaOq4OvvlHyE0Fy5ZCDjYm44AShrhL6yM+AU93rAVIyFWRbnehFO85SnVVIRwsopyWu9Bjq2pRQhXLvuERiTKArbADIWTmKLqbJxBOG8Xs3mz/ITAE5c5tCRHYswe24syV9dR5ZCBKZ6SNeiCw9+3zQu11B9Us2j/cjpHbwA9WwzJ/xV48v+jf2sfrHPt5DaP/6qverdNr4M18N78nmE1BLAQIUAxQAAAAIAMsgZ11Gx01IlQAAAM0AAAAQAAAAAAAAAAAAAACAAQAAAABkb2NQcm9wcy9hcHAueG1sUEsBAhQDFAAAAAgAyyBnXdB35R7vAAAAKwIAABEAAAAAAAAAAAAAAIABwwAAAGRvY1Byb3BzL2NvcmUueG1sUEsBAhQDFAAAAAgAyyBnXZlcnCMQBgAAnCcAABMAAAAAAAAAAAAAAIAB4QEAAHhsL3RoZW1lL3RoZW1lMS54bWxQSwECFAMUAAAACADLIGddQUwCLuYCAADPBwAAGAAAAAAAAAAAAAAAgIEiCAAAeGwvd29ya3NoZWV0cy9zaGVldDEueG1sUEsBAhQDFAAAAAgAyyBnXVFWBWD3AwAA0AsAABgAAAAAAAAAAAAAAICBPgsAAHhsL3dvcmtzaGVldHMvc2hlZXQyLnhtbFBLAQIUAxQAAAAIAMsgZ137/p7iEAMAAHEOAAANAAAAAAAAAAAAAACAAWsPAAB4bC9zdHlsZXMueG1sUEsBAhQDFAAAAAgAyyBnXZeKuxzAAAAAEwIAAAsAAAAAAAAAAAAAAIABphIAAF9yZWxzLy5yZWxzUEsBAhQDFAAAAAgAyyBnXW1MqOtHAQAAswIAAA8AAAAAAAAAAAAAAIABjxMAAHhsL3dvcmtib29rLnhtbFBLAQIUAxQAAAAIAMsgZ12N9yxatAAAAIkCAAAaAAAAAAAAAAAAAACAAQMVAAB4bC9fcmVscy93b3JrYm9vay54bWwucmVsc1BLAQIUAxQAAAAIAMsgZ11upyS8HgEAAFcEAAATAAAAAAAAAAAAAACAAe8VAABbQ29udGVudF9UeXBlc10ueG1sUEsFBgAAAAAKAAoAhAIAAD4XAAAAAA==',
+conferences:'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',
+books:'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'};
+const TPLN={journals:'Journal_Template.xlsx',conferences:'Conference_Template.xlsx',books:'Book_and_BookChapter_Template.xlsx'};
+let WB=null,ROWS=[],HDR=[],MAPV={};
+async function readFile(){const f=$('file').files[0];if(!f)return;
+ try{WB=XLSX.read(await f.arrayBuffer(),{type:'array'})}catch(e){return msg('Cannot read this file')}
+ $('sheet').innerHTML=WB.SheetNames.map((n,i)=>`<option value="${i}">${esc(n)}</option>`).join('');
+ $('sheetbox').style.display=WB.SheetNames.length>1?'block':'none';loadSheet()}
+function loadSheet(){const ws=WB.Sheets[WB.SheetNames[+$('sheet').value||0]];
+ const a=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false,blankrows:false});
+ let h=a.slice(0,15).findIndex(r=>{const c=r.filter(x=>String(x).trim()!=='');return c.length>=3&&c.filter(x=>isNaN(x)).length>=c.length*0.7});if(h<0)h=0;
+ HDR=(a[h]||[]).map((x,i)=>String(x).trim()||('Column '+(i+1)));ROWS=a.slice(h+1);detect();automap()}
+function detect(){const hn=new Set(HDR.map(norm));let best=null,bs=0;
+ for(const t in T){const fl=T[t].f.map(x=>norm(x[1])),m=fl.filter(x=>hn.has(x)).length,sc=m/(fl.length+hn.size-m);if(sc>bs){bs=sc;best=t}}
+ if(best&&bs>=0.6&&best!=tab){tab=best;tabs();msg('Detected '+T[best].label+' format, type selected automatically')}}
+function automap(){if(!WB)return;const pairs=[];
+ T[tab].f.forEach(([k,l])=>HDR.forEach((h,c)=>{const n=norm(h),syn=[norm(k),norm(l)].concat((SYN[k]||[]).map(norm));let sc=0;
+  if(syn.includes(n))sc=100-syn.indexOf(n)*0.1;else if(syn.some(x=>x.length>=5&&n.includes(x)))sc=60;
+  if(sc)pairs.push([sc,k,c])}));
+ pairs.sort((a,b)=>b[0]-a[0]);MAPV={};const used=new Set();
+ pairs.forEach(([sc,k,c])=>{if(!(k in MAPV)&&!used.has(c)){MAPV[k]=c;used.add(c)}});renderMap()}
+function setM(k,v){if(v==='')delete MAPV[k];else MAPV[k]=+v}
+function renderMap(){$('map').innerHTML=`<div class="m"><b>${ROWS.length}</b> rows found. Match your columns to the ${T[tab].label} format (auto-detected, change if needed):</div><div class="g">`+
+ T[tab].f.map(([k,l])=>`<div><label>${l}</label><select onchange="setM('${k}',this.value)"><option value="">- none -</option>`+
+  HDR.map((h,c)=>`<option value="${c}"${MAPV[k]===c?' selected':''}>${esc(h)}</option>`).join('')+'</select></div>').join('')+'</div>'}
+async function upload(){if(!sb)return msg('Supabase is not set');if(!WB)return msg('Choose a file first');
+ const rows=[];let skip=0;
+ ROWS.forEach(r=>{const o={};T[tab].f.forEach(([k])=>{if(MAPV[k]!==undefined)o[k]=r[MAPV[k]]});
+  if(TYPES[tab]&&T[tab].f.some(x=>x[0]=='pub_type')){let v=String(o.pub_type||'').trim();
+   o.pub_type=!v?TYPES[tab][0]:/chapter/i.test(v)?'Book Chapter':v}
+  const b=build(o);if(!b.title&&!b.author_name){skip++;return}rows.push(b)});
+ if(!rows.length)return msg('No usable rows. Check the column matching above.');
+ $('upinfo').textContent=`Importing ${rows.length} rows to ${T[tab].label}...`;
+ for(let i=0;i<rows.length;i+=500){try{await ins(tab,rows.slice(i,i+500))}catch(e){$('upinfo').textContent='Failed: '+e.message;return}}
+ $('upinfo').textContent=`Done: ${rows.length} rows imported${skip?`, ${skip} empty rows skipped`:''}.`;
+ $('file').value='';WB=null;$('map').innerHTML='';$('sheetbox').style.display='none';await load(tab);search()}
+
+function labelled(rows,t){return rows.map((r,i)=>{const o={'S.No':i+1};T[t].f.forEach(([k,l])=>o[l]=r[k]??'');return o})}
+function template(t){t=t||tab;
+ if(t=='patents'){const h=T.patents.f.map(x=>x[1]),ex=['2024-25','Computer Science','Dr. A. Sharma','Dr. B. Verma, Mr. C. Singh','Title of the invention','202411012345','15/07/2024','','','Filed','India',''],
+  wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([h,ex]),'Patents');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Instructions'],['Session: academic year such as 2024-25 (July to June). If left empty it is worked out from the Date of Filing.'],['Date of Filing, Published Date, Granted Date: DD/MM/YYYY. Leave Published Date and Granted Date empty until they happen.'],['Status: Filed, Published, Under Examination, Granted or Rejected.'],['Faculty Name: lead faculty. Put other inventors in Co-Inventors, separated by commas.'],['Delete the example row before uploading.']]),'Instructions');
+  XLSX.writeFile(wb,'Patent_Template.xlsx');return}
+ const x=atob(TPL[t]),u=new Uint8Array(x.length);for(let i=0;i<x.length;i++)u[i]=x.charCodeAt(i);
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([u],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+ a.download=TPLN[t];document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+function dl(id,type){const S=SEC.find(x=>x.id==id);if(!R[id]||!R[id].length)return msg('Nothing to download in '+S.label);
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(labelled(R[id],S.src)),S.label);
+ XLSX.writeFile(wb,`${id}_results.${type}`,{bookType:type})}
+function dlAll(){const wb=XLSX.utils.book_new();SEC.forEach(S=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(labelled(R[S.id]||[],S.src)),S.label));
+ XLSX.writeFile(wb,'all_publications.xlsx')}
+
+let MODE='all',MF=[];
+function openImport(m){$('imp').style.display='block';impMode(typeof m=='string'?m:MODE)}
+function impMode(m){MODE=m;$('impa').hidden=m!='all';$('imp1').hidden=m!='one';document.querySelectorAll('#impm button').forEach(b=>b.classList.toggle('on',b.dataset.m==m))}
+function pickHdr(a){let h=a.slice(0,15).findIndex(r=>{const c=r.filter(x=>String(x).trim()!=='');return c.length>=3&&c.filter(x=>isNaN(x)).length>=c.length*0.7});return h<0?0:h}
+function autoMapFor(hdr,t){const pairs=[];
+ T[t].f.forEach(([k,l])=>hdr.forEach((h,c)=>{const n=norm(h),syn=[norm(k),norm(l)].concat((SYN[k]||[]).map(norm));let sc=0;
+  if(syn.includes(n))sc=100-syn.indexOf(n)*0.1;else if(syn.some(x=>x.length>=5&&n.includes(x)))sc=60;
+  if(sc)pairs.push([sc,k,c])}));
+ pairs.sort((a,b)=>b[0]-a[0]);const mp={},used=new Set();
+ pairs.forEach(([sc,k,c])=>{if(!(k in mp)&&!used.has(c)){mp[k]=c;used.add(c)}});return mp}
+function guessType(hdr,name){const hn=new Set(hdr.map(norm));let best=null,bs=0;
+ for(const t in T){const fl=T[t].f.map(x=>norm(x[1])),m=fl.filter(x=>hn.has(x)).length,sc=m/(fl.length+hn.size-m);if(sc>bs){bs=sc;best=t}}
+ if(best&&bs>=0.6)return best;
+ const n=name.toLowerCase();if(/patent/.test(n))return'patents';if(/chapter|book/.test(n))return'books';if(/conf/.test(n))return'conferences';if(/journal/.test(n))return'journals';
+ let bt='skip',bc=2;for(const t in T){const mp=autoMapFor(hdr,t),c=Object.keys(mp).length;if('title' in mp&&c>bc){bc=c;bt=t}}return bt}
+async function readAll(){const files=[...$('mfile').files];MF=[];
+ for(const f of files){let wb;try{wb=XLSX.read(await f.arrayBuffer(),{type:'array'})}catch(e){msg('Cannot read '+f.name);continue}
+  wb.SheetNames.forEach(sn=>{const a=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:'',raw:false,blankrows:false});if(!a.length)return;
+   const h=pickHdr(a),hdr=(a[h]||[]).map((x,i)=>String(x).trim()||('Column '+(i+1))),rows=a.slice(h+1).filter(r=>r.some(c=>String(c).trim()!==''));if(!rows.length)return;
+   MF.push({file:f.name,sheet:sn,hdr,rows,t:guessType(hdr,sn+' '+f.name)})})}
+ renderMulti()}
+function setMT(i,v){MF[i].t=v;renderMulti()}
+function renderMulti(){const box=$('mprev'),go=$('mgo');$('minfo').textContent='';
+ if(!MF.length){box.innerHTML=$('mfile').files.length?'<div class="m" style="margin-top:10px;color:var(--dg)">No data rows found in the selected file(s).</div>':'';go.disabled=true;return}
+ let tot=0;const rows=MF.map((it,i)=>{const on=it.t!='skip',mp=on?autoMapFor(it.hdr,it.t):{},nm=Object.keys(mp).length,nf=on?T[it.t].f.length:0,bad=on&&!('title' in mp)&&!('author_name' in mp);if(on&&!bad)tot+=it.rows.length;
+  return `<tr><td>${esc(it.file)}</td><td>${esc(it.sheet)}</td><td>${it.rows.length}</td><td><select onchange="setMT(${i},this.value)" style="padding:5px 8px">`+Object.keys(T).map(k=>`<option value="${k}"${it.t==k?' selected':''}>${T[k].label}</option>`).join('')+`<option value="skip"${it.t=='skip'?' selected':''}>Skip this sheet</option></select></td><td>${on?(bad?'<span style="color:var(--dg)">No title or author column</span>':`${nm} of ${nf} columns matched`):'<span class="m">Not imported</span>'}</td></tr>`}).join('');
+ box.innerHTML=`<div class="m" style="margin:12px 0 6px"><b>${MF.length}</b> sheet${MF.length==1?'':'s'} found. Check the record type of each one:</div><div class="w" style="max-height:300px"><table><thead><tr><th>File</th><th>Sheet</th><th>Rows</th><th>Import as</th><th>Columns</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+ go.disabled=!tot;go.textContent=tot?`Import all (${tot} rows)`:'Import all'}
+const dk=r=>norm(r.title||'')+'|'+norm(r.author_name||'')+'|'+norm(r.pub_type||'');
+async function uploadAll(){if(!sb)return msg('Supabase is not set');const items=MF.filter(x=>x.t!='skip');if(!items.length)return msg('Choose a file first');
+ const sd=$('mdup').checked,seen={},out={journals:[],conferences:[],books:[],patents:[]};let empty=0,dups=0;
+ for(const t in T)seen[t]=new Set(sd?D[t].map(dk):[]);
+ items.forEach(it=>{const t=it.t,mp=autoMapFor(it.hdr,t),isCh=/chapter/i.test(it.sheet);
+  if(!('title' in mp)&&!('author_name' in mp))return;
+  it.rows.forEach(r=>{const o={};T[t].f.forEach(([k])=>{if(mp[k]!==undefined)o[k]=r[mp[k]]});
+   if(TYPES[t]&&T[t].f.some(x=>x[0]=='pub_type')){const v=String(o.pub_type||'').trim();o.pub_type=!v?(t=='books'&&isCh?'Book Chapter':TYPES[t][0]):/chapter/i.test(v)?'Book Chapter':v}
+   const b=build(o,t);if(!b.title&&!b.author_name){empty++;return}
+   if(sd){const k=dk(b);if(seen[t].has(k)){dups++;return}seen[t].add(k)}
+   out[t].push(b)})});
+ const n=Object.values(out).reduce((a,b)=>a+b.length,0);
+ if(!n){$('minfo').textContent=dups?`Nothing new: all ${dups} records are already stored.`:'No usable rows found.';return}
+ $('mgo').disabled=true;const parts=[];let done=0;
+ try{for(const t in out){const L=out[t];if(!L.length)continue;
+   for(let i=0;i<L.length;i+=500){$('minfo').textContent=`Importing ${T[t].label}... ${done} of ${n}`;await ins(t,L.slice(i,i+500));done+=Math.min(500,L.length-i)}
+   parts.push(`${L.length} ${T[t].label.toLowerCase()}`)}}
+ catch(e){$('minfo').textContent='Failed after '+done+' rows: '+e.message;$('mgo').disabled=false;return}
+ $('minfo').textContent=`Done: imported ${parts.join(', ')}${dups?`; ${dups} already stored skipped`:''}${empty?`; ${empty} empty rows skipped`:''}.`;
+ $('mfile').value='';MF=[];$('mprev').innerHTML='';$('mgo').textContent='Import all';
+ for(const t in T)await load(t);search()}
+function closeImport(){$('imp').style.display='none'}
+function togglePop(e){e.stopPropagation();const p=$('addpop');p.hidden=!p.hidden;if(!p.hidden){const r=e.currentTarget.getBoundingClientRect();p.style.position='fixed';p.style.top=(r.bottom+6)+'px';p.style.right=Math.max(8,innerWidth-r.right)+'px';p.style.left='auto';p.style.zIndex=60}}
+window.addEventListener('scroll',()=>{$('addpop').hidden=true},{passive:true});window.addEventListener('resize',()=>{$('addpop').hidden=true});
+function toggleMore(){const m=$('more');m.hidden=!m.hidden;$('moreb').textContent=m.hidden?'More filters':'Fewer filters'}
+document.addEventListener('click',()=>{$('addpop').hidden=true});
+document.addEventListener('keydown',e=>{if(e.key=='Escape'){closeForm();closeImport();$('addpop').hidden=true}
+ if(e.key=='Enter'&&e.target.tagName=='INPUT'&&e.target.id.startsWith('q_'))search()});
+function openRec(t,id){const r=D[t].find(x=>x.id==id);if(!r)return;
+ $('drb').innerHTML=`<h3>${esc(r.title)}</h3>`+T[t].f.filter(([k])=>k!='title').map(([k,l])=>`<div class="kv"><span>${l}</span><div>${k=='link'&&r[k]?`<a href="${esc(r[k])}" target="_blank" rel="noopener">${esc(r[k])}</a>`:k=='indexing'?badge(r[k]):esc(r[k])||'-'}</div></div>`).join('')+`<div class="bar">${act(t,id)}</div>`;
+ document.body.classList.add('dro')}
+function closeDr(){document.body.classList.remove('dro')}
+function ayRange(k){const n=new Date(),y=(n.getMonth()>=6?n.getFullYear():n.getFullYear()-1)-k,f=(d,m,dd)=>d+'-'+String(m).padStart(2,'0')+'-'+String(dd).padStart(2,'0');return[f(y,7,1),f(y+1,6,30),y]}
+function preset(p){XF.mon=null;const n=new Date(),f=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');let a,b=n;
+ if(/^cay\d$/.test(p)){const r=ayRange(+p[3]);$('q_from').value=r[0];$('q_to').value=r[1];search();return}
+ if(p=='yr'){a=new Date(n.getFullYear(),0,1);b=new Date(n.getFullYear(),11,31)}else{a=new Date(n);a.setMonth(a.getMonth()-6)}
+ $('q_from').value=f(a);$('q_to').value=f(b);search()}
+(function(){const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];for(let k=0;k<4;k++){const y=ayRange(k)[2];$('cay'+k).title='Jul '+y+' to Jun '+(y+1)}})();
+function theme(){const d=document.documentElement,c=d.dataset.theme||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'),n=c=='dark'?'light':'dark';d.dataset.theme=n;try{localStorage.setItem('th',n)}catch(e){}}
+try{const t=localStorage.getItem('th');if(t)document.documentElement.dataset.theme=t}catch(e){}
+let _t;document.querySelectorAll('[id^=q_]').forEach(el=>el.addEventListener(el.tagName=='SELECT'||el.type=='date'?'change':'input',()=>{if(el.id=='q_name'){XF.au=XF.auN=null}if(/^q_(from|to|month)$/.test(el.id))XF.mon=null;clearTimeout(_t);_t=setTimeout(search,220)}));
+document.addEventListener('keydown',e=>{if(e.key=='Escape')closeDr()});
+['dragover','drop'].forEach(ev=>$('imp').addEventListener(ev,e=>{e.preventDefault();if(ev=='drop'&&e.dataTransfer.files.length){$('file').files=e.dataTransfer.files;readFile()}}));
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.btn');if(!b)return;const r=b.getBoundingClientRect(),x=document.createElement('span');x.className='rp';x.style.left=e.clientX-r.left+'px';x.style.top=e.clientY-r.top+'px';b.appendChild(x);setTimeout(()=>x.remove(),600)});
+document.addEventListener('mousemove',e=>{const t=e.target.closest&&e.target.closest('.st,.ixs');if(!t)return;const r=t.getBoundingClientRect();t.style.setProperty('--mx',e.clientX-r.left+'px');t.style.setProperty('--my',e.clientY-r.top+'px')});
+let ME=null,CRED=null;const can=f=>!!ME&&(ME.role=='admin'||!!(ME.features||{})[f]);
+const F=[['view','View & search'],['add','Add'],['edit','Edit'],['delete','Delete'],['import','Import'],['export','Download'],['dups','Duplicates'],['delete_all','Delete all']];
+async function rpc(fn,body){let r;try{r=await fetch(sb.u+'/rest/v1/rpc/'+fn,{method:'POST',headers:hd(),body:JSON.stringify(body)})}catch(e){throw new Error('Cannot reach Supabase')}await chk(r);const t=await r.text();return t?JSON.parse(t):null}
+async function doLogin(c){const u=c?c.u:$('lu').value.trim(),p=c?c.p:$('lp').value;if(!u||!p)return;$('lerr').textContent='';
+ try{const me=await rpc('app_login',{u,p});if(!me){$('lerr').textContent='Wrong username or password, or your account is still waiting for admin approval';return}
+  ME=me;CRED={u,p};saveCr();$('login').style.display='none';$('lp').value='';startIdle();perms();await refresh()}
+ catch(e){$('lerr').textContent=e.message+' (run supabase_users.sql in Supabase first)'}}
+function logout(reason){try{sessionStorage.removeItem('cr')}catch(e){}HIST.length=0;ME=CRED=null;D={journals:[],conferences:[],books:[],patents:[]};R={};
+ $('res').innerHTML='';$('dash').innerHTML='';$('backbar').hidden=true;closeSet();closeDr();closeForm();closeImport();closeFc();$('fcr').innerHTML='';$('addpop').hidden=true;
+ ['lu','lp','su','sp','sp2','fu','fc','fp'].forEach(i=>{const e=$(i);if(e)e.value=''});
+ $('login').style.display='block';lv('in');if(reason){const e=$('lerr');e.textContent=reason;e.style.color='var(--mut)'}clearInterval(IDLE.t);IDLE.t=null}
+const IDLE={max:15*60*1000,last:Date.now(),t:null};
+function saveCr(){try{if(CRED)sessionStorage.setItem('cr',JSON.stringify({u:CRED.u,p:CRED.p,t:Date.now()}))}catch(e){}}
+function touch(){const n=Date.now();IDLE.last=n;if(ME&&n-(IDLE.s||0)>10000){IDLE.s=n;saveCr()}}
+function idleCheck(){if(!ME)return;if(Date.now()-IDLE.last>IDLE.max)logout('Your session expired due to inactivity. Please sign in again.')}
+function startIdle(){IDLE.last=Date.now();clearInterval(IDLE.t);IDLE.t=setInterval(idleCheck,20000)}
+['click','keydown','mousemove','scroll','touchstart'].forEach(ev=>window.addEventListener(ev,touch,{passive:true,capture:true}));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)idleCheck()});
+window.addEventListener('pageshow',e=>{if(e.persisted&&ME)idleCheck()});
+async function boot(){let c=null;try{c=JSON.parse(sessionStorage.getItem('cr')||'null')}catch(e){}
+ if(!c||!c.u||!c.p||Date.now()-(c.t||0)>IDLE.max){try{sessionStorage.removeItem('cr')}catch(e){}return}
+ $('login').style.display='none';
+ try{await doLogin({u:c.u,p:c.p})}catch(e){}
+ if(!ME){try{sessionStorage.removeItem('cr')}catch(e){}$('login').style.display='block';$('lerr').textContent=''}}
+function perms(){$('setb').hidden=ME.role!='admin';$('addw').hidden=!can('add');$('impb').hidden=!can('import');$('fcb').hidden=!can('view');$('dlall').hidden=!can('export');$('who').textContent='Sign out ('+ME.username+')'}
+function openSettings(){if(!ME||ME.role!='admin')return;$('set').style.display='block';sTab(ME.role=='admin'?'users':'acct')}
+function closeSet(){$('set').style.display='none'}
+function sTab(k){const t=[['users','Users & features'],['acct','My account'],['data','Data']].filter(x=>x[0]!='users'||ME.role=='admin');
+ $('stabs').innerHTML=t.map(x=>`<button class="${x[0]==k?'on':''}" onclick="sTab('${x[0]}')">${x[1]}</button>`).join('');({users:usersPanel,acct:acctPanel,data:dataPanel})[k]()}
+const sw=(k,v)=>`<label class="sw"><input type="checkbox" data-k="${k}"${v?' checked':''}><i></i></label>`;
+const PRE={Viewer:['view','export'],Editor:['view','add','edit','import','export','dups'],'Full access':F.map(f=>f[0]),'No access':[]};
+const hue=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))%360;return h};
+function ucard(u,i){const f=u.features||{},n=F.filter(x=>f[x[0]]).length;
+ return `<div class="uc${u.active?'':' off'}" data-id="${u.id}" data-u="${esc(u.username.toLowerCase())}" data-o="${esc(JSON.stringify([!!u.active,F.map(x=>!!f[x[0]])]))}" style="--i:${i}">
+<div class="uh"><div class="av" style="--h:${hue(u.username)}">${esc(u.username[0].toUpperCase())}</div><div class="un"><b>${esc(u.username)}</b><span class="m"><span class="pc">${n}</span> of ${F.length} features</span></div><button class="pill${u.active?' on':''}" data-k="active" onclick="tg(this)">${u.active?'Active':'Disabled'}</button></div>
+<div class="meter"><i style="width:${n/F.length*100}%"></i></div>
+<div class="fcs">${F.map(x=>`<button class="fc${f[x[0]]?' on':''}" data-k="${x[0]}" onclick="tg(this)">${x[1]}</button>`).join('')}</div>
+<div class="pre"><span class="m">Quick set</span>${Object.keys(PRE).map(k=>`<button class="chip" onclick="preset2(this,'${k}')">${k}</button>`).join('')}</div>
+<div class="up"><input type="text" class="pw2" placeholder="New password (blank keeps current)" oninput="ref(this)"><button class="chip" onclick="gen(this)">Generate</button></div>
+<div class="bar"><button class="btn sm" disabled onclick="saveUser(${u.id})">Save changes</button><button class="btn s sm danger" onclick="delUser(${u.id})">Delete</button><span class="dirty"></span></div></div>`}
+function ref(el){const c=el.closest('.uc'),on=c.querySelectorAll('.fc.on').length,a=c.querySelector('.pill').classList.contains('on');
+ c.querySelector('.pc').textContent=on;c.querySelector('.meter i').style.width=(on/F.length*100)+'%';c.classList.toggle('off',!a);
+ const d=JSON.stringify([a,[...c.querySelectorAll('.fc')].map(b=>b.classList.contains('on'))])!=c.dataset.o||c.querySelector('.pw2').value!=='';
+ c.querySelector('.btn').disabled=!d;c.querySelector('.dirty').textContent=d?'Unsaved changes':''}
+function tg(el){el.classList.toggle('on');if(el.dataset.k=='active')el.textContent=el.classList.contains('on')?'Active':'Disabled';ref(el)}
+function preset2(b,k){const c=b.closest('.uc');c.querySelectorAll('.fc').forEach(x=>x.classList.toggle('on',PRE[k].includes(x.dataset.k)));ref(c.querySelector('.fc'))}
+function gen(b){const a='abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$';let p='';crypto.getRandomValues(new Uint32Array(10)).forEach(v=>p+=a[v%a.length]);const i=b.parentNode.querySelector('input');i.value=p;i.dispatchEvent(new Event('input'))}
+function ufilter(){const q=$('us').value.trim().toLowerCase();let n=0;document.querySelectorAll('.uc').forEach(c=>{const m=c.dataset.u.includes(q);c.hidden=!m;if(m)n++});$('uno').hidden=n>0}
+async function usersPanel(){$('sbody').innerHTML='<div class="sk"></div><div class="sk"></div>';let L;
+ try{L=await rpc('app_list_users',{au:CRED.u,ap:CRED.p})}catch(e){return $('sbody').innerHTML='<div class="empty">'+esc(e.message)+'</div>'}
+ L=L.filter(u=>u.role!='admin');const act=L.filter(u=>u.active).length;
+ $('sbody').innerHTML=`<div class="ms"><div class="card"><b id="m1">0</b><span>Users</span></div><div class="card"><b id="m2">0</b><span>Active</span></div><div class="card"><b id="m3">0</b><span>Disabled</span></div></div>
+<div class="card nuw"><h2>Add a user</h2><div class="g" style="margin-top:10px"><div><label>Username</label><input id="nu" autocomplete="off"></div><div><label>Password (min 6)</label><div class="up"><input id="np" type="text" autocomplete="off"><button class="chip" onclick="gen(this)">Generate</button></div></div>
+<div><label>Starting access</label><select id="npre">${Object.keys(PRE).map(k=>`<option${k=='Viewer'?' selected':''}>${k}</option>`).join('')}</select></div><div style="align-self:end"><button class="btn" onclick="saveUser(null)">Create user</button></div></div></div>
+<div class="rhead"><h2>Users</h2><input id="us" placeholder="Search users" oninput="ufilter()" style="max-width:240px"></div>
+<div class="m" style="margin-bottom:10px">The admin account always has every feature. Switch features on or off, or use Quick set, then press Save changes.</div>
+<div class="ugrid">${L.map(ucard).join('')}</div><div class="empty" id="uno" hidden>No users match.</div>${L.length?'':'<div class="empty">No users yet. Add one above.</div>'}`;
+ countUp($('m1'),'u_t',L.length);countUp($('m2'),'u_a',act);countUp($('m3'),'u_d',L.length-act)}
+async function saveUser(id){const o={au:CRED.u,ap:CRED.p,uid:id,uname:null,upass:'',ufeat:{},uactive:true};
+ if(id===null){o.uname=$('nu').value.trim();o.upass=$('np').value;if(!o.uname||o.upass.length<6)return msg('Enter a username and a password of at least 6 characters');PRE[$('npre').value].forEach(k=>o.ufeat[k]=true)}
+ else{const c=document.querySelector(`.uc[data-id="${id}"]`);c.querySelectorAll('.fc').forEach(b=>o.ufeat[b.dataset.k]=b.classList.contains('on'));o.uactive=c.querySelector('.pill').classList.contains('on');o.upass=c.querySelector('.pw2').value;if(o.upass&&o.upass.length<6)return msg('Password must be at least 6 characters')}
+ try{await rpc('app_save_user',o);msg(id===null?'User created':'Saved');usersPanel()}catch(e){msg('Error: '+(/duplicate/i.test(e.message)?'that username already exists':e.message))}}
+async function delUser(id){if(!confirm('Delete this user?'))return;try{await rpc('app_delete_user',{au:CRED.u,ap:CRED.p,uid:id});msg('User deleted');usersPanel()}catch(e){msg('Error: '+e.message)}}
+function acctPanel(){$('sbody').innerHTML=`<p>Signed in as <b>${esc(ME.username)}</b> (${ME.role}).</p><div class="g"><div><label>New password (min 6 characters)</label><input id="cp" type="password"></div><div style="align-self:end"><button class="btn" onclick="chgPw()">Change password</button></div></div>`}
+async function chgPw(){const n=$('cp').value;if(n.length<6)return msg('Password must be at least 6 characters');
+ try{await rpc('app_change_password',{u:CRED.u,p:CRED.p,np:n});CRED.p=n;saveCr();$('cp').value='';msg('Password changed')}catch(e){msg('Error: '+e.message)}}
+function dataPanel(){$('sbody').innerHTML=`<p class="m" style="margin-bottom:12px">Stored now: ${D.journals.length} journals, ${D.conferences.length} conferences and ${D.books.length} books and chapters, ${D.patents.length} patents.</p><div class="g" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))"><div class="card"><h2>Export all data</h2><p class="m">Downloads every record (journals, conferences, books, chapters and patents, ignoring any search) as one Excel file.</p><button class="btn" ${can('export')?'':'disabled'} onclick="exportAll()">Export all data</button></div>
+<div class="card"><h2>Import all data</h2><p class="m">Upload an exported Excel file (or several files) and add every sheet in one go. Sheets are detected automatically.</p><button class="btn" ${can('import')?'':'disabled'} onclick="closeSet();openImport('all')">Import all data</button></div>
+<div class="card"><h2>Delete all data</h2><p class="m">Permanently removes every record. A backup Excel file downloads first, and you must type DELETE ALL and enter your password.</p><button class="btn s danger" ${can('delete_all')?'':'disabled'} onclick="delAll()">Delete all data</button></div></div>`}
+function bk(){const wb=XLSX.utils.book_new();SEC.forEach(S=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(labelled(D[S.src].filter(S.ok),S.src)),S.label));XLSX.writeFile(wb,'all_data_backup_'+new Date().toISOString().slice(0,10)+'.xlsx')}
+function exportAll(){if(!can('export'))return;if(!Object.values(D).some(a=>a.length))return msg('No data to export');bk()}
+async function delAll(){if(!can('delete_all'))return;const n=Object.values(D).reduce((a,b)=>a+b.length,0);if(!n)return msg('No data to delete');
+ if(prompt(`This permanently deletes all ${n} records. A backup Excel file downloads first.\nType DELETE ALL to continue.`)!=='DELETE ALL')return msg('Cancelled');
+ const pw=prompt('Enter your password to confirm');if(!pw)return msg('Cancelled');
+ try{if(!await rpc('app_login',{u:CRED.u,p:pw}))return msg('Wrong password');bk();
+  for(const t in T){if(t=='patents'&&PW)continue;const r=await fetch(`${sb.u}/rest/v1/${t}?id=gt.0`,{method:'DELETE',headers:hd({Prefer:'return=minimal'})});await chk(r)}
+  msg('All data deleted');await loadAll();search()}catch(e){msg('Error: '+e.message+' (delete needs supabase_edit_delete.sql)')}}
+document.addEventListener('keydown',e=>{if(e.key=='Escape'){closeSet()}});
+['lu','lp'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key=='Enter')doLogin()}));
+const XF={idx:null,mon:null,au:null,auN:null,st:null};
+
+function openFc(){$('fcm').style.display='block'}function closeFc(){$('fcm').style.display='none'}
+const fcNorm=t=>String(t||'').toLowerCase().replace(/\b(dr|prof|professor|mr|mrs|ms|er|shri|smt)\b\.?/g,' ').replace(/[^a-z\s]/g,' ').replace(/\s+/g,' ').trim();
+function fcPossible(f,g){if(f.length<1||g.length<1)return false;const inn=(a,b)=>a.every(x=>b.includes(x));
+ if(f.length>=2&&inn(f,g))return true;if(g.length>=2&&inn(g,f))return true;
+ return f.length>=2&&g.length>=2&&f[f.length-1]==g[g.length-1]&&f[0][0]==g[0][0]}
+async function runFc(){const file=$('fcf').files[0],out=$('fcr');if(!file){out.innerHTML='<div class="m" style="color:var(--dg);margin-top:10px">Please choose the faculty Excel file first.</div>';return}
+ try{const wb=XLSX.read(await file.arrayBuffer(),{type:'array'}),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''}).filter(r=>r.some(c=>String(c).trim()));
+  if(!rows.length)throw new Error('The file is empty');
+  let ni=0,di=-1,st=0;const h=rows[0].map(c=>String(c).toLowerCase());const hn=h.findIndex(c=>/name|faculty/.test(c));
+  if(hn>=0){ni=hn;st=1}else if(h.every(c=>!c||/sr|s\.?no|dept|department|designation/.test(c))){st=1}
+  di=h.findIndex(c=>/dept|department/.test(c));
+  const fac=rows.slice(st).map(r=>({n:String(r[ni]||'').trim(),d:di>=0?String(r[di]||'').trim():''})).filter(x=>x.n);
+  const per=$('fcp').value;let rg=null;if(per!='all'){const a=ayRange(+per);rg=[Date.parse(a[0]),Date.parse(a[1])]}
+  const segs=new Set(),segTok=[];[D.journals,D.conferences,D.books].forEach(L=>L.forEach(r=>{
+   if(rg){const g=dateRange(r.pub_date??r.pub_year??r.filing_date)||(r.year?[Date.UTC(r.year,0,1),Date.UTC(r.year,11,31)]:null);if(!g||g[1]<rg[0]||g[0]>rg[1])return}
+   [r.author_name,r.glb_auth_name,r.all_author].forEach(v=>String(v||'').split(/[,;&\n]|\band\b/i).forEach(x=>{const k=fcNorm(x);if(k&&!segs.has(k)){segs.add(k);segTok.push(k.split(' '))}}))}));
+  const none=[],maybe=[];fac.forEach(f=>{const k=fcNorm(f.n);if(!k)return;if(segs.has(k))return;const ft=k.split(' ');if(segTok.some(g=>fcPossible(ft,g)))maybe.push(f);else none.push(f)});
+  const L=(a,t)=>a.length?`<table class="tb" style="width:100%;margin-top:6px"><tbody>${a.map((x,i)=>`<tr><td style="width:36px">${i+1}</td><td>${esc(x.n)}</td><td>${esc(x.d)}</td></tr>`).join('')}</tbody></table>`:`<div class="m">${t}</div>`;
+  out.innerHTML=`<div style="margin-top:14px"><h3 style="margin:0">No publications (${none.length} of ${fac.length})</h3>${L(none,'Every faculty member has at least one publication in this period.')}</div>`+
+   (maybe.length?`<div style="margin-top:14px"><h3 style="margin:0">Possible match, please verify (${maybe.length})</h3><div class="m">The name is written differently in the records (initials, order or spelling).</div>${L(maybe,'')}</div>`:'')+
+   `<div class="bar"><button class="btn s" id="fcx">Download list (Excel)</button></div>`;
+  $('fcx').onclick=()=>{const ws=XLSX.utils.aoa_to_sheet([['Status','Faculty name','Department']].concat(none.map(x=>['No publications',x.n,x.d]),maybe.map(x=>['Possible match - verify',x.n,x.d]))),w=XLSX.utils.book_new();XLSX.utils.book_append_sheet(w,ws,'Faculty check');XLSX.writeFile(w,'faculty_without_publications.xlsx')}
+ }catch(e){out.innerHTML='<div class="m" style="color:var(--dg);margin-top:10px">'+esc(e.message||'Could not read the file')+'</div>'}}
+const HIST=[];
+function snap(){return JSON.stringify({i:XF.idx,m:XF.mon,a:XF.au,an:XF.auN,q:['q_name','q_from','q_to','q_month','q_title','q_dept','q_idx','q_ses','q_dtype'].map(i=>$(i).value)})}
+function pushH(){const x=snap();if(HIST[HIST.length-1]!==x)HIST.push(x);bkb()}
+function bkb(){$('backbar').hidden=!HIST.length;$('bkinfo').textContent=HIST.length?'Return to your previous view':''}
+function goBack(){const x=HIST.pop();if(!x){bkb();return}const o=JSON.parse(x);XF.idx=o.i;XF.mon=o.m;XF.au=o.a;XF.auN=o.an;['q_name','q_from','q_to','q_month','q_title','q_dept','q_idx','q_ses','q_dtype'].forEach((id,k)=>$(id).value=o.q[k]||'');bkb();search()}
+
+const IX=[['Scopus',165],['SCI/SCIE',265],['ESCI',35],['WoS',200],['UGC-CARE',300],['Other',215],['Unspecified',0]],MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function idxKey(v){const l=String(v||'').toLowerCase().trim();return !l?'Unspecified':/esci/.test(l)?'ESCI':/scopus/.test(l)?'Scopus':/sci/.test(l)?'SCI/SCIE':/wos|web of/.test(l)?'WoS':/ugc/.test(l)?'UGC-CARE':'Other'}
+function ixf(k){pushH();XF.idx=XF.idx==k?null:k;search()}
+function authF(k,n){pushH();XF.au=XF.au==k?null:k;XF.auN=XF.au?n:null;search()}
+function monthF(k){pushH();XF.mon=k;const y=+k.slice(0,4),m=+k.slice(5);$('q_from').value=k+'-01';$('q_to').value=k+'-'+String(new Date(y,m,0).getDate()).padStart(2,'0');search()}
+let FAC=[];
+function sesF(k){pushH();$('q_ses').value=$('q_ses').value==k?'':k;search()}
+function stF(k){pushH();XF.st=XF.st==k?null:k;search()}
+function facF(i){const x=FAC[i];if(x)authF(x.k,x.n)}
+function patDash(go){
+ const sS=$('q_ses').value,sA=XF.au,sT=XF.st,run=(s,au,st)=>{$('q_ses').value=s;XF.au=au;XF.st=st;return D.patents.filter(match)};
+ const bySes=run('',sA,sT),byFac=run(sS,null,sT),byStat=run(sS,sA,null);$('q_ses').value=sS;XF.au=sA;XF.st=sT;
+ const sc={};bySes.forEach(r=>{const k=sesOf(r);sc[k]=(sc[k]||0)+1});
+ const sk=Object.keys(sc).sort((a,b)=>a==''?1:b==''?-1:b.localeCompare(a)),t=bySes.length;
+ const fc=new Map();byFac.forEach(r=>authList(r).forEach((n,k)=>{const e=fc.get(k)||{k,n,c:0};e.c++;fc.set(k,e)}));
+ FAC=[...fc.values()].sort((a,b)=>b.c-a.c||a.n.localeCompare(b.n));
+ const st=new Map();byStat.forEach(r=>{const l=String(r.status||'').trim(),k=l.toLowerCase();const e=st.get(k)||{l:l||'Not set',k,c:0};e.c++;st.set(k,e)});
+ $('dash').className=go?'go':'';
+ $('dash').innerHTML=`<div class="card ixr"><div class="ixt"><h2>Patents by session</h2><span class="m">${sS?sS+' selected':'Click a session to filter'}</span></div>`+
+  (D.patents.length?`<div class="ixb"><button class="ixs all${sS?'':' on'}" style="--c:1;--i:0" aria-pressed="${!sS}" title="Show all sessions" onclick="$('q_ses').value&&sesF($('q_ses').value)"><i class="ixn" id="ixtot">0</i><span class="ixl"><b>All sessions</b><small>${t==1?'1 patent':t+' patents'}</small></span><span class="ixk"><em></em></span></button>`+
+   sk.map((k,i)=>{const c=sc[k],p=Math.round(c/Math.max(t,1)*100),h=(235+i*38)%360;return `<button class="ixs${sS==k?' on':''}${sS&&sS!=k?' dim':''}" style="--h:${h};--c:${c};--i:${i+1};--p:${Math.max(p,3)}%" ${k?`onclick="sesF('${k}')"`:'disabled'}><i class="ixn">${c}</i><span class="ixl"><b>${k||'No session'}</b><small>${p}%<u> of total</u></small></span><span class="ixk"><em></em></span></button>`}).join('')+`</div>`+
+   (st.size?`<div class="ixt" style="margin:16px 0 8px"><h2 style="font-size:15px">By status</h2></div><div class="chips">`+[...st.values()].sort((a,b)=>b.c-a.c).map(x=>`<button class="chip${sT==x.k?' on':''}" onclick="stF('${esc(x.k).replace(/'/g,'')}')">${esc(x.l)} (${x.c})</button>`).join('')+`</div>`:''):'<div class="ixb m">No patents yet. Use Add record or Import from Excel.</div>')+`</div>`+
+  (FAC.length?`<div class="card" style="margin-top:12px"><div class="ixt"><h2>Patents by faculty</h2><span class="m">${FAC.length} faculty${XF.au?' · '+esc(XF.auN)+' selected':' · click a name to filter'}</span></div><div class="fcl">`+
+   FAC.map((x,i)=>`<button class="fci${XF.au==x.k?' on':''}" onclick="facF(${i})" title="${esc(x.n)}"><span>${esc(x.n)}</span><b>${x.c}</b></button>`).join('')+`</div></div>`:'');
+ const e=$('ixtot');if(e)countUp(e,'ixt',t)}
+function dash(go){if(!ME||!can('view'))return;
+ const hr=new Date().getHours();$('hsub').textContent=`Good ${hr<12?'morning':hr<17?'afternoon':'evening'}, ${ME.username}. ${D.journals.length} journals, ${D.conferences.length} conferences and ${D.books.length} books and chapters, ${D.patents.length} patents on record.`;
+ if(view=='patent'){patDash(go);return}
+ const sv=XF.idx;XF.idx=null;const a=[];
+ SEC.forEach(S=>{if(view!='dup'&&!VIEWS[view].includes(S.id))return;D[S.src].filter(S.ok).forEach(r=>{if(match(r))a.push(r)})});
+ XF.idx=sv;
+ const t=a.length,ic={};a.forEach(r=>{const k=idxKey(r.indexing);ic[k]=(ic[k]||0)+1});
+ const sg=IX.filter(x=>ic[x[0]]),sel=XF.idx?ic[XF.idx]||0:t;
+ $('dash').className=go?'go':'';
+ $('dash').innerHTML=`<div class="card ixr"><div class="ixt"><h2>By indexing</h2><span class="m">${XF.idx?`${XF.idx} selected`:'Hover and click to filter'}</span></div>`+
+  (t?`<div class="ixb"><button class="ixs all${XF.idx?'':' on'}" style="--c:1;--i:0" aria-pressed="${!XF.idx}" title="Show all indexing types" onclick="XF.idx&&ixf(XF.idx)"><i class="ixn" id="ixtot">0</i><span class="ixl"><b>All</b><small>${t==1?'1 record':t+' records'}</small></span><span class="ixk"><em></em></span></button>`+
+   sg.map(([k,h],i)=>{const c=ic[k],p=Math.round(c/t*100);return `<button class="ixs${XF.idx==k?' on':''}${XF.idx&&XF.idx!=k?' dim':''}" style="--h:${h};--c:${c};--i:${i+1};--p:${Math.max(p,3)}%" aria-pressed="${XF.idx==k}" title="${k}: ${c} of ${t} (${p}%)" onclick="ixf('${k}')"><i class="ixn">${c}</i><span class="ixl"><b>${k}</b><small>${p}%<u> of total</u></small></span><span class="ixk"><em></em></span></button>`}).join('')+`</div>`:'<div class="ixb m">No publications match this search.</div>')+`</div>`;
+ const e=$('ixtot');if(e)countUp(e,'ixt',t)}
+
+tabs();
+
+function lv(v){['in','up','fg'].forEach(k=>{$('v_'+k).hidden=k!=v});document.querySelectorAll('.lt2 button').forEach(b=>b.classList.toggle('on',b.dataset.v==v));$('lerr').textContent='';$('lerr').style.color='var(--dg)';$('rcbox').hidden=true}
+function lmsg(t,ok){const e=$('lerr');e.textContent=t;e.style.color=ok?'hsl(150 55% 38%)':'var(--dg)';if(!ok){const d=document.querySelector('#login .lc');d.classList.remove('shake');void d.offsetWidth;d.classList.add('shake')}}
+function sStr(){const p=$('sp').value;let n=0;if(p.length>=6)n++;if(p.length>=10)n++;if(/[A-Z]/.test(p)&&/[a-z]/.test(p))n++;if(/\d/.test(p)&&/[^A-Za-z0-9]/.test(p))n++;const b=$('sbar');b.style.width=(p?Math.max(1,n)*25:0)+'%';b.style.background=['','#e11d48','#f59e0b','#84cc16','#10b981'][p?Math.max(1,n):0]}
+function mkCode(){const a='ABCDEFGHJKMNPQRSTUVWXYZ23456789';let c='';crypto.getRandomValues(new Uint32Array(12)).forEach((v,i)=>{c+=a[v%a.length];if(i%4==3&&i<11)c+='-'});return c}
+async function doSignup(){const u=$('su').value.trim(),p=$('sp').value,p2=$('sp2').value;
+ if(!u||p.length<6)return lmsg('Enter a username and a password of at least 6 characters');if(p!==p2)return lmsg('Passwords do not match');
+ const rc=mkCode();try{await rpc('app_signup',{u,p,rc});$('rcv').textContent=rc;$('rcbox').hidden=false;$('su').value=$('sp').value=$('sp2').value='';sStr();lmsg('Account created. It will work once the admin approves it.',true)}
+ catch(e){lmsg(/duplicate|exists/i.test(e.message)?'That username is already taken':e.message+' (run supabase_signup.sql in Supabase first)')}}
+function rcCopy(){try{navigator.clipboard.writeText($('rcv').textContent)}catch(e){}}
+async function doReset(){const u=$('fu').value.trim(),rc=$('fc').value.trim().toUpperCase(),np=$('fp').value;
+ if(!u||!rc||np.length<6)return lmsg('Enter username, recovery code and a new password (min 6)');
+ try{const ok=await rpc('app_reset_password',{u,rc,np});if(!ok)return lmsg('Username or recovery code is wrong');$('fc').value=$('fp').value='';lv('in');$('lu').value=u;lmsg('Password changed. Please sign in.',true)}
+ catch(e){lmsg(e.message+' (run supabase_signup.sql in Supabase first)')}}
+['su','sp','sp2'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key=='Enter')doSignup()}));['fu','fc','fp'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key=='Enter')doReset()}));
+if(SB_URL&&SB_KEY){sb=mk(SB_URL,SB_KEY);if(sb)boot();else $('cfgwarn').style.display='block'}else $('cfgwarn').style.display='block'
+</script></div></body></html>
